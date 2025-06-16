@@ -29,7 +29,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: java-app
-          path: './autoatendimento/autoatendimento/target/*.jar'
+          path: './autoatendimento/autoatendimento/target/autoatendimento-0.0.1-SNAPSHOT.jar'
 
   deploy:
     runs-on: ubuntu-latest
