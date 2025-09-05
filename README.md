@@ -34,7 +34,7 @@ Simular um sistema de autoatendimento, utilizando recursos como câmera do celul
 Abra um terminal e execute:
 
 ```bash
-cd autoatendimento/autoatendimento
+cd autoatendimento
 ./mvnw clean package
 ./mvnw spring-boot:run
 ```
