@@ -3,12 +3,10 @@ package com.mktgus.autoatendimento.infrastructure.persistence.entity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
-@NoArgsConstructor
 @Entity
 public class CustomerEntity {
 
@@ -16,6 +14,9 @@ public class CustomerEntity {
     private Long cpf;  // Não precisa do @GeneratedValue, pois o CPF é fornecido pelo usuário
 
     private int pontos;
+
+    public CustomerEntity() {
+    }
 
     public CustomerEntity(Long cpf, int pontos) {
         this.cpf = cpf;

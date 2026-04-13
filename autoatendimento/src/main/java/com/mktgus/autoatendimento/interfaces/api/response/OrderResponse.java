@@ -9,6 +9,7 @@ public record OrderResponse(
         Long couponId,
         LocalDateTime orderedAt,
         double totalAmount,
-        List<OrderItemResponse> items
+        List<OrderItemResponse> items,
+        Integer updatedPointsBalance
 ) {
 }

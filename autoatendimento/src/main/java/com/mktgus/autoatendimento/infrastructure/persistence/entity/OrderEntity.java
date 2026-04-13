@@ -3,7 +3,6 @@ package com.mktgus.autoatendimento.infrastructure.persistence.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 
@@ -12,7 +11,6 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
-@NoArgsConstructor
 @Entity
 public class OrderEntity {
 
@@ -35,6 +33,9 @@ public class OrderEntity {
 
     @Column(nullable = false)
     private double valorTotal;
+
+    public OrderEntity() {
+    }
 
     public CustomerEntity getCliente() {
         return cliente;

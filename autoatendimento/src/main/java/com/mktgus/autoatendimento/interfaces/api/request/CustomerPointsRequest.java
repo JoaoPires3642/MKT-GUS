@@ -1,3 +1,9 @@
 package com.mktgus.autoatendimento.interfaces.api.request;
 
-public record CustomerPointsRequest(String cpf, int requiredPoints) {}
+import com.fasterxml.jackson.annotation.JsonAlias;
+
+public record CustomerPointsRequest(
+        String cpf,
+        @JsonAlias({"pontosNecessarios", "pointsBalance"})
+        int requiredPoints
+) {}

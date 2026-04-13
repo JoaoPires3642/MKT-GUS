@@ -10,7 +10,6 @@ import java.time.LocalDate;
 
 @Getter
 @Setter
-@NoArgsConstructor
 @Entity
 public class EmployeeEntity {
 
@@ -36,4 +35,7 @@ public class EmployeeEntity {
 
     @Column(nullable = false)
     private double salario;
+
+    public EmployeeEntity() {
+    }
 }

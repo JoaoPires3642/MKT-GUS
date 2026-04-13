@@ -2,13 +2,11 @@ package com.mktgus.autoatendimento.infrastructure.persistence.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 import jakarta.validation.constraints.Min;
 
 @Getter
 @Setter
-@NoArgsConstructor
 @Entity
 public class CouponEntity {
 
@@ -40,4 +38,7 @@ public class CouponEntity {
     @Column(nullable = true)
     @Min(value = 0, message = "Desconto máximo deve ser positivo")
     private Double maxDiscount;
+
+    public CouponEntity() {
+    }
 }

@@ -3,12 +3,10 @@ package com.mktgus.autoatendimento.infrastructure.persistence.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
-@NoArgsConstructor
 @Entity
 public class OrderItemEntity {
 
@@ -33,6 +31,9 @@ public class OrderItemEntity {
     private String nomeProduto;
     private double valorProduto;
     private boolean produtoMaiorDeIdade;
+
+    public OrderItemEntity() {
+    }
 
     public Long getId() {
         return id;
