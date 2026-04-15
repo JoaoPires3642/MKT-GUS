@@ -4,6 +4,21 @@ Base URL: `http://localhost:8080`
 
 ---
 
+## 📋 Sumário
+
+| # | Método | Endpoint | Descrição |
+|---|--------|---------|-----------|
+| 1 | `GET` | `/produtos/listar` | Listar produtos escaneados |
+| 2 | `GET` | `/produtos/buscar/{barcode}` | Buscar produto por código |
+| 3 | `POST` | `/produtos/buscar` | Buscar produto (POST) |
+| 4 | `POST` | `/pedidos/confirmar-compra` | Confirmar compra |
+| 5 | `GET` | `/api/cupons` | Listar cupons |
+| 6 | `POST` | `/pessoa/verificar-cpf` | Verificar CPF do cliente |
+| 7 | `POST` | `/api/pontos/finalizar-compra` | Atualizar pontos |
+| 8 | `POST` | `/api/funcionarios/verificar-matricula` | Verificar matrícula |
+
+---
+
 ## Produtos
 
 ### Listar Produtos Escaneados
