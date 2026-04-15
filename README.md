@@ -14,7 +14,7 @@ Permitir que o cliente escaneie seus próprios produtos, visualize informações
 
 - **Backend:** Java 21 + Spring Boot 3
 - **Frontend:** React + Next.js + TypeScript + Tailwind CSS
-- **Banco de Dados:** MySQL (configurável para PostgreSQL)
+- **Banco de Dados:** MySQL
 - **Integrações:** API Mercado Livre (catálogo produtos), DroidCam (scanner)
 
 ---
