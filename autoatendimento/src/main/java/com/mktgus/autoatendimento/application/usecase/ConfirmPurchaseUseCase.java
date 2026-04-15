@@ -15,6 +15,7 @@ import com.mktgus.autoatendimento.domain.model.Order;
 import com.mktgus.autoatendimento.domain.model.OrderItem;
 import com.mktgus.autoatendimento.domain.model.PriceOverrideAudit;
 import com.mktgus.autoatendimento.domain.model.Product;
+import com.mktgus.autoatendimento.infrastructure.config.PontosConfig;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +30,7 @@ public class ConfirmPurchaseUseCase {
     private final EmployeeGateway employeeGateway;
     private final PriceOverrideAuditGateway priceOverrideAuditGateway;
     private final FindProductByBarcodeUseCase findProductByBarcodeUseCase;
+    private final PontosConfig pontosConfig;
 
     public ConfirmPurchaseUseCase(
             OrderGateway orderGateway,
@@ -36,7 +38,8 @@ public class ConfirmPurchaseUseCase {
             CouponGateway couponGateway,
             EmployeeGateway employeeGateway,
             PriceOverrideAuditGateway priceOverrideAuditGateway,
-            FindProductByBarcodeUseCase findProductByBarcodeUseCase
+            FindProductByBarcodeUseCase findProductByBarcodeUseCase,
+            PontosConfig pontosConfig
     ) {
         this.orderGateway = orderGateway;
         this.clientGateway = clientGateway;
@@ -44,6 +47,7 @@ public class ConfirmPurchaseUseCase {
         this.employeeGateway = employeeGateway;
         this.priceOverrideAuditGateway = priceOverrideAuditGateway;
         this.findProductByBarcodeUseCase = findProductByBarcodeUseCase;
+        this.pontosConfig = pontosConfig;
     }
 
     @Transactional
@@ -274,7 +278,10 @@ public class ConfirmPurchaseUseCase {
     }
 
     private int calculateEarnedPoints(double subtotal) {
-        return ((int) Math.floor(subtotal / 50)) * 10;
+        double valorPorPonto = pontosConfig.getValorPorPonto();
+        int pontosPorBloco = pontosConfig.getPontosPorBloco();
+        int blocos = (int) (subtotal / valorPorPonto);
+        return blocos * pontosPorBloco;
     }
 
     private record PurchaseDraft(List<OrderItem> items, List<PriceOverrideAudit> priceOverrideAudits) {

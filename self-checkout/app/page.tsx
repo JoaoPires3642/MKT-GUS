@@ -38,9 +38,13 @@ export default function Home() {
   const [pointsToEarn, setPointsToEarn] = useState(0)
   const [notification, setNotification] = useState<string | null>(null)
 
-  useEffect(() => { //função de calcular os pontos
+  useEffect(() => { //função de calcular os pontos (deve vir do backend no futuro)
+    // Por enquanto usa config local - no futuro buscar de /api/config/pontos
+    const PONTOS_VALOR_POR_PONTO = 5.0
+    const PONTOS_POR_BLOCO = 10
     const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
-    const newPointsToEarn = Math.floor(subtotal / 50) * 10
+    const blocos = Math.floor(subtotal / PONTOS_VALOR_PONTO)
+    const newPointsToEarn = blocos * PONTOS_POR_BLOCO
     setPointsToEarn(newPointsToEarn)
   }, [cart])
 

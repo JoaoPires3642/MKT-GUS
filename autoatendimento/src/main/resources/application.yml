@@ -22,3 +22,7 @@ management:
     health:
       probes:
         enabled: true
+
+pontos:
+  valor-por-ponto: ${PONTOS_VALOR_POR_PONTO:5.0}
+  pontos-por-bloco: ${PONTOS_PONTOS_POR_BLOCO:10}
