@@ -13,6 +13,15 @@ spring:
     properties:
       hibernate:
         format_sql: ${SPRING_JPA_FORMAT_SQL:true}
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    operationsSorter: method
+
 management:
   endpoints:
     web:
