@@ -9,6 +9,7 @@ import com.mktgus.autoatendimento.domain.gateway.EmployeeGateway;
 import com.mktgus.autoatendimento.domain.gateway.OrderGateway;
 import com.mktgus.autoatendimento.domain.gateway.PriceOverrideAuditGateway;
 import com.mktgus.autoatendimento.domain.gateway.ProductCatalogGateway;
+import com.mktgus.autoatendimento.infrastructure.config.PontosConfig;
 import com.mktgus.autoatendimento.domain.model.Coupon;
 import com.mktgus.autoatendimento.domain.model.Customer;
 import com.mktgus.autoatendimento.domain.model.Order;
@@ -37,13 +38,16 @@ class ConfirmPurchaseUseCaseTest {
         InMemoryOrderGateway orderGateway = new InMemoryOrderGateway();
         FindProductByBarcodeUseCase findProductByBarcodeUseCase = new FindProductByBarcodeUseCase(new InMemoryProductCatalogGateway());
 
+        PontosConfig pontosConfig = new PontosConfig();
+
         ConfirmPurchaseUseCase useCase = new ConfirmPurchaseUseCase(
                 orderGateway,
                 clientGateway,
                 couponGateway,
                 new InMemoryEmployeeGateway(),
                 new InMemoryPriceOverrideAuditGateway(),
-                findProductByBarcodeUseCase
+                findProductByBarcodeUseCase,
+                pontosConfig
         );
 
         ConfirmPurchaseOutput output = useCase.execute(new ConfirmPurchaseInput(
@@ -66,13 +70,16 @@ class ConfirmPurchaseUseCaseTest {
         InMemoryCouponGateway couponGateway = new InMemoryCouponGateway();
         couponGateway.coupons.put(1L, new Coupon(1L, "Cupom", "", 10, false, 20, null, null));
 
+        PontosConfig pontosConfig = new PontosConfig();
+
         ConfirmPurchaseUseCase useCase = new ConfirmPurchaseUseCase(
                 new InMemoryOrderGateway(),
                 clientGateway,
                 couponGateway,
                 new InMemoryEmployeeGateway(),
                 new InMemoryPriceOverrideAuditGateway(),
-                new FindProductByBarcodeUseCase(new InMemoryProductCatalogGateway())
+                new FindProductByBarcodeUseCase(new InMemoryProductCatalogGateway()),
+                pontosConfig
         );
 
         assertThrows(ValidationException.class, () -> useCase.execute(new ConfirmPurchaseInput(
@@ -90,13 +97,16 @@ class ConfirmPurchaseUseCaseTest {
         InMemoryCouponGateway couponGateway = new InMemoryCouponGateway();
         couponGateway.coupons.put(1L, new Coupon(1L, "Cupom", "", 10, true, 20, 200.0, null));
 
+        PontosConfig pontosConfig = new PontosConfig();
+
         ConfirmPurchaseUseCase useCase = new ConfirmPurchaseUseCase(
                 new InMemoryOrderGateway(),
                 clientGateway,
                 couponGateway,
                 new InMemoryEmployeeGateway(),
                 new InMemoryPriceOverrideAuditGateway(),
-                new FindProductByBarcodeUseCase(new InMemoryProductCatalogGateway())
+                new FindProductByBarcodeUseCase(new InMemoryProductCatalogGateway()),
+                pontosConfig
         );
 
         assertThrows(ValidationException.class, () -> useCase.execute(new ConfirmPurchaseInput(
@@ -110,13 +120,16 @@ class ConfirmPurchaseUseCaseTest {
     void shouldAllowAuthorizedPriceOverrideAndPersistAudit() {
         InMemoryPriceOverrideAuditGateway auditGateway = new InMemoryPriceOverrideAuditGateway();
 
+        PontosConfig pontosConfig = new PontosConfig();
+
         ConfirmPurchaseUseCase useCase = new ConfirmPurchaseUseCase(
                 new InMemoryOrderGateway(),
                 new InMemoryClientGateway(),
                 new InMemoryCouponGateway(),
                 new InMemoryEmployeeGateway(),
                 auditGateway,
-                new FindProductByBarcodeUseCase(new InMemoryProductCatalogGateway())
+                new FindProductByBarcodeUseCase(new InMemoryProductCatalogGateway()),
+                pontosConfig
         );
 
         ConfirmPurchaseOutput output = useCase.execute(new ConfirmPurchaseInput(
