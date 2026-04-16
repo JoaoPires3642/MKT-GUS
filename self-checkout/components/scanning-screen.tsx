@@ -36,11 +36,11 @@ interface ErrorMessage {
 }
 
 export default function ScanningScreen({
-                                         cart,
-                                         onUpdateQuantity,
-                                         onRemoveProduct,
-                                         onAddProduct,
-                                         onCheckout,
+                                          cart,
+                                           onUpdateQuantity,
+                                           onRemoveProduct,
+                                           onAddProduct,
+                                           onCheckout,
                                          onCancel,
                                          onAddBeerClick,
                                          onMyPointsClick,
@@ -211,6 +211,11 @@ export default function ScanningScreen({
                         </div>
                         <div>
                           <div className="font-medium text-base">{item.name}</div>
+                          {item.priceOverride && (
+                            <div className="text-sm text-[#2d5d3d]">
+                              Ajustado por matrícula {item.priceOverride.employeeRegistration}
+                            </div>
+                          )}
                         </div>
                       </div>
 
@@ -225,6 +230,11 @@ export default function ScanningScreen({
                           <span className="font-bold text-lg text-black">
                         R$ {item.price.toFixed(2).replace(".", ",")}
                       </span>
+                          {item.originalPrice && Math.abs(item.originalPrice - item.price) > 0.01 && (
+                            <span className="text-xs text-gray-500 line-through">
+                              R$ {item.originalPrice.toFixed(2).replace(".", ",")}
+                            </span>
+                          )}
                         </div>
 
                         <Button

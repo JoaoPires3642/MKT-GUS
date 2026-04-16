@@ -10,11 +10,13 @@ import PaymentScreen from "@/components/payment-screen"
 import SuccessScreen from "@/components/success-screen"
 import CancelConfirmation from "@/components/cancel-confirmation"
 import AgeVerificationPopup from "@/components/age-verification-popup"
+import AuthorizePricePopup from "@/components/authorize-price-popup"
+import EmployeeCartPopup from "@/components/employee-cart-popup"
 import PointsBlockedPopup from "@/components/points-blocked-popup"
 import MyPointsPopup from "@/components/my-points-popup"
 import CpfInputPopup from "@/components/cpf-input-popup"
 import BarcodeInputPopup from "@/components/barcode-input-popup"
-import type { Product, Coupon } from "@/lib/types"
+import type { Product, Coupon, PriceOverride } from "@/lib/types"
 
 export default function Home() {
   const [currentScreen, setCurrentScreen] = useState<"welcome" | "scanning" | "payment" | "success">("welcome")
@@ -25,6 +27,9 @@ export default function Home() {
   const [showMyPointsPopup, setShowMyPointsPopup] = useState(false)
   const [showCpfInputPopup, setShowCpfInputPopup] = useState(false)
   const [showBarcodeInputPopup, setShowBarcodeInputPopup] = useState(false)
+  const [employeeRegistration, setEmployeeRegistration] = useState<string | null>(null)
+  const [showEmployeeCartPopup, setShowEmployeeCartPopup] = useState(false)
+  const [selectedProductForPriceAdjust, setSelectedProductForPriceAdjust] = useState<Product | null>(null)
   const [cpf, setCpf] = useState("")
   const [cart, setCart] = useState<Product[]>([])
   const [hasCpf, setHasCpf] = useState(false)
@@ -33,41 +38,15 @@ export default function Home() {
   const [pointsToEarn, setPointsToEarn] = useState(0)
   const [notification, setNotification] = useState<string | null>(null)
 
-  useEffect(() => { //função de calcular os pontos
+  useEffect(() => { //função de calcular os pontos (deve vir do backend no futuro)
+    // Por enquanto usa config local - no futuro buscar de /api/config/pontos
+    const PONTOS_VALOR_POR_PONTO = 5.0
+    const PONTOS_POR_BLOCO = 10
     const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
-    const newPointsToEarn = Math.floor(subtotal / 50) * 10
+    const blocos = Math.floor(subtotal / PONTOS_VALOR_PONTO)
+    const newPointsToEarn = blocos * PONTOS_POR_BLOCO
     setPointsToEarn(newPointsToEarn)
   }, [cart])
-
-
-  // Função para enviar pontos ao backend
-  const updatePointsInBackend = async (cpf: string, points: number) => {
-    try {
-      const response = await fetch("http://localhost:8080/api/pontos/finalizar-compra", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          cpf,
-          pointsBalance: points,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Erro ao atualizar pontos no backend");
-      }
-
-      const data = await response.json();
-      console.log("Pontos atualizados com sucesso:", data);
-      return true;
-    } catch (error) {
-      console.error("Erro ao enviar pontos:", error);
-      alert("Não foi possível atualizar os pontos. Tente novamente.");
-      return false;
-    }
-  };
-
 
 
   useEffect(() => {
@@ -91,12 +70,12 @@ export default function Home() {
             // Produto recebido
             const newProduct: Product = {
               id: Date.now(),
-              name: data.nome,
-              price: data.valor,
+              name: data.name ?? data.nome,
+              price: data.price ?? data.valor,
               quantity: 1,
-              image: data.urlImagem,
+              image: data.imageUrl ?? data.urlImagem,
               ean: data.ean,
-              isAdult: data.produtoMaiorDeIdade,
+              isAdult: data.adultOnly ?? data.produtoMaiorDeIdade,
             }
             addProduct(newProduct)
           } else if (data.message) {
@@ -188,12 +167,12 @@ export default function Home() {
         // Produto recebido
         const newProduct: Product = {
           id: Date.now(),
-          name: data.nome || "Beck's Beer",
-          price: data.valor || 4.5, // Preço padrão caso a API não retorne
+          name: data.name || data.nome || "Beck's Beer",
+          price: data.price || data.valor || 4.5,
           quantity: 1,
-          image: data.urlImagem || "", // Imagem padrão caso a API não retorne
+          image: data.imageUrl || data.urlImagem || "",
           ean: data.ean,
-          isAdult: data.produtoMaiorDeIdade || true, // Assume que é produto adulto
+          isAdult: data.adultOnly ?? data.produtoMaiorDeIdade ?? true,
         };
         addProduct(newProduct);
       } else {
@@ -244,7 +223,34 @@ export default function Home() {
   };
 
   const handleCheckout = () => {
+    if (cart.length === 0) {
+      setNotification("Adicione ao menos um item para continuar.")
+      return
+    }
+
     setCurrentScreen("payment")
+  }
+
+  const handleOpenPriceAdjust = (product: Product) => {
+    setShowEmployeeCartPopup(false)
+    setSelectedProductForPriceAdjust(product)
+  }
+
+  const handleApplyPriceAdjust = (productId: number, newPrice: number, priceOverride: PriceOverride) => {
+    setCart((currentCart) => currentCart.map((item) => {
+      if (item.id !== productId) {
+        return item
+      }
+
+      return {
+        ...item,
+        originalPrice: item.originalPrice ?? item.price,
+        price: newPrice,
+        priceOverride,
+      }
+    }))
+    setSelectedProductForPriceAdjust(null)
+    setNotification("Preço ajustado com autorização do funcionário.")
   }
 
   const handlePaymentConfirm = async () => {
@@ -256,15 +262,20 @@ export default function Home() {
       return;
     }
 
-    const newPointsBalance = pointsBalance - pointsDeducted + pointsToEarn;
-
-    const pedidoPayload = {
-      clienteCpf: hasCpf && cpf ? cpf.replace(/\D/g, "") : null,
-      itens: cart.map((item) => ({
-        ean: item.ean,
-        quantidade: item.quantity,
-        valorUnitario: item.price,
-      })),
+      const pedidoPayload = {
+        clienteCpf: hasCpf && cpf ? cpf.replace(/\D/g, "") : null,
+        itens: cart.map((item) => ({
+          ean: item.ean,
+          quantidade: item.quantity,
+          valorUnitario: item.price,
+          ajustePreco: item.priceOverride
+            ? {
+                matriculaFuncionario: item.priceOverride.employeeRegistration,
+                valorAutorizado: item.priceOverride.authorizedUnitPrice,
+                motivo: item.priceOverride.reason,
+              }
+            : null,
+        })),
       cupom: appliedCoupon
           ? {
             id: parseInt(appliedCoupon.id),
@@ -292,33 +303,8 @@ export default function Home() {
       const pedido = await response.json();
       console.log("Pedido confirmado:", pedido);
 
-      // Segunda requisição: atualizar pontos
-      if (hasCpf && cpf) {
-        const pointsResponse = await fetch("http://localhost:8080/api/pontos/finalizar-compra", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            cpf: cpf.replace(/\D/g, ""),
-            pontosNecessarios: newPointsBalance,
-          }),
-        });
-
-        if (!pointsResponse.ok) {
-          const errorText = await pointsResponse.text();
-          let errorData;
-          try {
-            errorData = JSON.parse(errorText);
-            throw new Error(errorData.message || "Erro ao atualizar pontos");
-          } catch {
-            throw new Error(`Erro ao atualizar pontos: ${errorText}`);
-          }
-        }
-
-        const pointsData = await pointsResponse.json();
-        console.log("Pontos atualizados:", pointsData);
-        setPointsBalance(newPointsBalance);
+      if (typeof pedido.updatedPointsBalance === "number") {
+        setPointsBalance(pedido.updatedPointsBalance);
       }
 
       setCart([]);
@@ -349,7 +335,7 @@ export default function Home() {
   }
 
   const addProduct = (product: Product) => {
-    const existingProduct = cart.find((item) => item.ean === product.ean)
+    const existingProduct = cart.find((item) => item.ean === product.ean && !item.priceOverride && !product.priceOverride)
     if (existingProduct) {
       updateProductQuantity(existingProduct.id, existingProduct.quantity + 1)
     } else {
@@ -364,9 +350,39 @@ export default function Home() {
   const handleBarcodeSubmit = async (barcode: string) => {
     setShowBarcodeInputPopup(false)
     try {
-      // Fazer requisição POST para o backend
-      await axios.post("http://localhost:8080/produtos/buscar", { barcode })
-      // A resposta será processada via WebSocket
+      if (cart.length > 0) {
+        try {
+          const employeeResponse = await axios.post("http://localhost:8080/api/funcionarios/verificar-matricula", {
+            registration: barcode,
+          })
+
+          if (employeeResponse.data.valid) {
+            setEmployeeRegistration(barcode)
+            setShowEmployeeCartPopup(true)
+            return
+          }
+        } catch {
+          // segue para busca de produto se o codigo nao for matricula valida
+        }
+      }
+
+      const response = await axios.post("http://localhost:8080/produtos/buscar", { barcode })
+      const data = response.data
+
+      if (data.ean) {
+        addProduct({
+          id: Date.now(),
+          name: data.name ?? data.nome,
+          price: data.price ?? data.valor,
+          quantity: 1,
+          image: data.imageUrl ?? data.urlImagem,
+          ean: data.ean,
+          isAdult: data.adultOnly ?? data.produtoMaiorDeIdade,
+        })
+        return
+      }
+
+      setNotification(data.message || `Produto não encontrado para o código: ${barcode}`)
     } catch (error) {
       console.error("Erro ao buscar produto:", error)
       setNotification(`Erro ao buscar produto para o código: ${barcode}`)
@@ -445,6 +461,26 @@ export default function Home() {
           {showBarcodeInputPopup && (
               <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                 <BarcodeInputPopup onSubmit={handleBarcodeSubmit} onCancel={handleBarcodeInputCancel} />
+              </div>
+          )}
+          {showEmployeeCartPopup && employeeRegistration && (
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                <EmployeeCartPopup
+                    cart={cart}
+                    employeeRegistration={employeeRegistration}
+                    onSelectProduct={handleOpenPriceAdjust}
+                    onClose={() => setShowEmployeeCartPopup(false)}
+                />
+              </div>
+          )}
+          {selectedProductForPriceAdjust && (
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                <AuthorizePricePopup
+                    product={selectedProductForPriceAdjust}
+                    employeeRegistration={employeeRegistration ?? ""}
+                    onCancel={() => setSelectedProductForPriceAdjust(null)}
+                    onConfirm={handleApplyPriceAdjust}
+                />
               </div>
           )}
         </div>

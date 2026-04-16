@@ -1,0 +1,30 @@
+package com.mktgus.autoatendimento.infrastructure.config;
+
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Contact;
+import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.servers.Server;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import java.util.List;
+
+@Configuration
+public class OpenApiConfig {
+
+    @Bean
+    public OpenAPI customOpenAPI() {
+        return new OpenAPI()
+                .info(new Info()
+                        .title("MKT-GUS Autoatendimento API")
+                        .version("1.0.0")
+                        .description("API REST para sistema de autoatendimento com verificação de clientes, produtos, pedidos e cupons.")
+                        .contact(new Contact()
+                                .name("MKT-GUS Team")
+                                .email("contato@mktgus.com")))
+                .servers(List.of(
+                        new Server().url("http://localhost:8080").description("Servidor de Desenvolvimento"),
+                        new Server().url("https://api.mktgus.com").description("Servidor de Produção")
+                ));
+    }
+}

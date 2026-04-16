@@ -20,6 +20,8 @@ FROM eclipse-temurin:21-jre-alpine
 
 WORKDIR /app
 
+RUN apk add --no-cache wget
+
 # Create non-root user
 RUN addgroup -S spring && adduser -S spring -G spring
 

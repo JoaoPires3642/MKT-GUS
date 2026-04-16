@@ -2,11 +2,20 @@ export interface Product {
   id: number
   name: string
   price: number
+  originalPrice?: number
   quantity: number
   image?: string
   ean: string
   isAdult?: boolean
+  priceOverride?: PriceOverride
 }
+
+export interface PriceOverride {
+  employeeRegistration: string
+  authorizedUnitPrice: number
+  reason: string
+}
+
 export interface Coupon {
   id: string
   name: string

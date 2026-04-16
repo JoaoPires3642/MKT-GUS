@@ -1,0 +1,133 @@
+%%{init: {'theme': 'neutral', 'themeVariables': { 'primaryColor': '#ffffff', 'edgeLabelBackground':'#ffffff', 'lineColor':'#000000', 'secondaryColor':'#ffffff', 'tertiaryColor':'#ffffff'}}}%%
+erDiagram
+    direction LR
+    ESTADO {
+        int id  ""  
+        char sigla  ""  
+        varchar nome  ""  
+    }
+	CIDADE {
+		int id  ""  
+		varchar nome  ""  
+		int estado_id  ""  
+	}
+	BAIRRO {
+		int id  ""  
+		varchar nome  ""  
+		int cidade_id  ""  
+	}
+	ENDERECO {
+		bigint id  ""  
+		int bairro_id  ""  
+		varchar tipo_local  ""  
+		varchar logradouro  ""  
+		varchar numero  ""  
+		varchar complemento  ""  
+		varchar cep  ""  
+		double latitude  ""  
+		double longitude  ""  
+	}
+	MERCADO {
+		int id_mercado  ""  
+		varchar nome  ""  
+		bigint endereco_id  ""  
+		varchar horario_funcionamento  ""  
+		timestamp data_cadastro  ""  
+	}
+	FUNCIONARIO {
+		bigint id  ""  
+		varchar nome  ""  
+		varchar email  ""  
+		varchar senha  ""  
+		int id_mercado  ""  
+		boolean ativo  ""  
+		varchar cargo  ""  
+	}
+	CUPOM {
+		int id  ""  
+		varchar nome  ""  
+		varchar descricao  ""  
+		double valor_desconto  ""  
+		boolean desconto_em_porcentual  ""  
+		int custo  ""  
+		double min_purchase  ""  
+		double max_discount  ""  
+		int id_mercado  ""  
+	}
+	PEDIDO {
+		int id  ""  
+		bigint id_cliente  ""  
+		int id_cupom  ""  
+		int id_mercado  ""  
+		timestamp data_hora  ""  
+		double valor_total  ""  
+	}
+	PRODUTO_MERCADO {
+		int id  ""  
+		bigint id_produto  ""  
+		int id_mercado  ""  
+		double preco  ""  
+		int estoque  ""  
+		timestamp data_atualizacao  ""  
+	}
+	CATEGORIA {
+		int id  ""  
+		varchar nome  ""  
+		text descricao  ""  
+	}
+	PRODUTO {
+		bigint id  ""  
+		varchar nome  ""  
+		varchar codigo_barras  ""  
+		boolean is_maior_idade  ""  
+		varchar url_imagem  ""  
+		int categoria_id  ""  
+	}
+	PROMOCAO {
+		int id  ""  
+		int id_produto_mercado  ""  
+		int id_funcionario  ""  
+		double preco_promocional  ""  
+		timestamp data_inicio  ""  
+		timestamp data_validade  ""  
+		text descricao  ""  
+	}
+	HISTORICO_PRECO {
+		int id  ""  
+		int id_produto_mercado  ""  
+		double preco_antigo  ""  
+		double preco_novo  ""  
+		timestamp data_alteracao  ""  
+		int id_funcionario  ""  
+	}
+	CLIENTE {
+		bigint cpf  ""  
+		int pontos  ""  
+		timestamp data_cadastro  ""  
+	}
+	ITEMPEDIDO {
+		int id  ""  
+		int id_pedido  ""  
+		bigint id_produto  ""  
+		int quantidade  ""  
+		double valor_item_total  ""  
+	}
+
+	ESTADO||--o{CIDADE:"possui"
+	CIDADE||--o{BAIRRO:"possui"
+	BAIRRO||--o{ENDERECO:"possui"
+	ENDERECO||--o{MERCADO:"localiza"
+	MERCADO||--o{FUNCIONARIO:"emprega"
+	MERCADO||--o{CUPOM:"emite"
+	MERCADO||--o{PEDIDO:"recebe"
+	MERCADO||--o{PRODUTO_MERCADO:"vende"
+	CATEGORIA||--o{PRODUTO:"classifica"
+	PRODUTO||--o{PRODUTO_MERCADO:"está em"
+	PRODUTO_MERCADO||--o{PROMOCAO:"tem"
+	PRODUTO_MERCADO||--o{HISTORICO_PRECO:"sofre alteração"
+	FUNCIONARIO||--o{HISTORICO_PRECO:"registra"
+	FUNCIONARIO||--o{PROMOCAO:"cria"
+	CLIENTE||--o{PEDIDO:"realiza"
+	CUPOM||--o{PEDIDO:"aplicado em"
+	PEDIDO||--o{ITEMPEDIDO:"contém"
+	PRODUTO||--o{ITEMPEDIDO:"vendido em"

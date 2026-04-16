@@ -20,6 +20,8 @@ FROM node:20-alpine AS runner
 
 WORKDIR /app
 
+RUN apk add --no-cache wget
+
 # Create non-root user
 RUN addgroup -S nextjs && adduser -S nextjs -G nextjs
 
