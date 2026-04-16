@@ -15,6 +15,7 @@ spring:
     properties:
       hibernate:
         format_sql: ${SPRING_JPA_FORMAT_SQL:true}
+        dialect: ${SPRING_JPA_HIBERNATE_DIALECT:org.hibernate.dialect.PostgreSQLDialect}
 
 springdoc:
   api-docs:
