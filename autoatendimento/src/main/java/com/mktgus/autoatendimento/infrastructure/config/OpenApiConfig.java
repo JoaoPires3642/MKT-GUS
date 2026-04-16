@@ -18,7 +18,7 @@ public class OpenApiConfig {
                 .info(new Info()
                         .title("MKT-GUS Autoatendimento API")
                         .version("1.0.0")
-                        .description("API REST para sistema de autoatendimento com verificação de clientes, produtos, pedidos e cupons.")
+                        .description("API REST DOCs")
                         .contact(new Contact()
                                 .name("MKT-GUS Team")
                                 .email("contato@mktgus.com")))
