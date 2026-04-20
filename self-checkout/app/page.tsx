@@ -43,7 +43,7 @@ export default function Home() {
     const PONTOS_VALOR_POR_PONTO = 5.0
     const PONTOS_POR_BLOCO = 10
     const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
-    const blocos = Math.floor(subtotal / PONTOS_VALOR_PONTO)
+    const blocos = Math.floor(subtotal / PONTOS_VALOR_POR_PONTO)
     const newPointsToEarn = blocos * PONTOS_POR_BLOCO
     setPointsToEarn(newPointsToEarn)
   }, [cart])
