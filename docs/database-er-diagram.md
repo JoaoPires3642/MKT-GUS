@@ -1,27 +1,14 @@
-# Database ER Diagram - Modelo Proposto
+# Database ER Diagram - Estado Atual
 
-> ✅ **IMPLEMENTADO**: Campos `pontos_valor_por_ponto` e `pontos_por_bloco` adicionados à tabela `market`.
+> ✅ **IMPLEMENTADO**: Campo `market_id` adicionado à tabela `coupon` como identificador simples.
+>
+> ⚠️ **IMPORTANTE**: No backend atual nao existe tabela `market` nem relacionamento JPA de `coupon` para `market`.
 
 ```mermaid
 erDiagram
-    MARKET {
-        bigint id PK "ID autoincremento"
-        varchar nome
-        varchar rua
-        varchar numero
-        varchar bairro
-        varchar cidade
-        varchar estado
-        varchar cep
-        boolean ativo
-        decimal pontos_valor_por_ponto "R$ por ponto (padrão: 5)"
-        int pontos_por_bloco "Pontos por bloco (padrão: 10)"
-    }
-
     CUSTOMER {
         bigint cpf PK "CPF (chave primária)"
         int pontos
-        timestamp data_cadastro
     }
 
     COUPON {
@@ -31,17 +18,15 @@ erDiagram
         decimal valor_desconto
         boolean desconto_em_porcentual
         int custo
+        bigint market_id "Identificador do mercado, sem FK"
         decimal min_purchase
         decimal max_discount
-        varchar tipo "MKTGUS ou MERCADO"
-        varchar codigo_externo "Código do cupom do mercado (se aplicável)"
     }
 
     ORDER {
         bigint id PK "ID autoincremento"
-        bigint market_id FK "FK -> market(id)"
-        bigint customer_cpf FK "FK -> customer(cpf)"
-        bigint coupon_id FK "FK -> coupon(id), opcional"
+        bigint id_cliente FK "FK -> customer(cpf)"
+        bigint id_cupom FK "FK -> coupon(id), opcional"
         datetime data_hora
         decimal valor_total
     }
@@ -71,7 +56,6 @@ erDiagram
         datetime authorized_at
     }
 
-    MARKET ||--o{ ORDER : "possui"
     CUSTOMER ||--o{ ORDER : "faz"
     COUPON ||--o{ ORDER : "aplicado_em"
     ORDER ||--o{ ORDER_ITEM : "possui"
@@ -80,27 +64,11 @@ erDiagram
 
 ## Tabelas e Campos
 
-### market
-| Coluna | Tipo | Restrições |
-|--------|------|-------------|
-| id | BIGINT | PK, AUTO_INCREMENT |
-| nome | VARCHAR(100) | NOT NULL |
-| rua | VARCHAR(150) | |
-| numero | VARCHAR(20) | |
-| bairro | VARCHAR(100) | |
-| cidade | VARCHAR(100) | |
-| estado | VARCHAR(50) | |
-| cep | VARCHAR(20) | |
-| ativo | BOOLEAN | DEFAULT TRUE |
-| pontos_valor_por_ponto | DECIMAL | DEFAULT 5.00 (R$ por ponto) |
-| pontos_por_bloco | INT | DEFAULT 10 |
-
 ### customer
 | Coluna | Tipo | Restrições |
 |--------|------|-------------|
 | cpf | BIGINT | PK |
 | pontos | INT | DEFAULT 0 |
-| data_cadastro | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP |
 
 ### coupon
 | Coluna | Tipo | Restrições |
@@ -111,18 +79,16 @@ erDiagram
 | valor_desconto | DECIMAL | NOT NULL |
 | desconto_em_porcentual | BOOLEAN | NOT NULL |
 | custo | INT | NOT NULL, mínimo 2 |
+| market_id | BIGINT | Nullable, sem FK no modelo atual |
 | min_purchase | DECIMAL | |
 | max_discount | DECIMAL | |
-| tipo | VARCHAR(20) | 'MKTGUS' ou 'MERCADO' |
-| codigo_externo | VARCHAR(50) | Código do cupom externally (se tipo='MERCADO') |
 
 ### order
 | Coluna | Tipo | Restrições |
 |--------|------|-------------|
 | id | BIGINT | PK, AUTO_INCREMENT |
-| market_id | BIGINT | FK -> market(id), NOT NULL |
-| customer_cpf | BIGINT | FK -> customer(cpf), NOT NULL |
-| coupon_id | BIGINT | FK -> coupon(id), nullable |
+| id_cliente | BIGINT | FK -> customer(cpf), nullable |
+| id_cupom | BIGINT | FK -> coupon(id), nullable |
 | data_hora | DATETIME | NOT NULL |
 | valor_total | DECIMAL | NOT NULL |
 
@@ -155,29 +121,27 @@ erDiagram
 
 ## Relacionamentos
 
-- **market** 1:N **order** - Cada mercado pode ter vários pedidos
-- **customer** 1:N **order** - Cada cliente pode fazer vários pedidos
-- **coupon** 0:1 **order** - Um cupom pode ser aplicado em um pedido (opcional)
+- **customer** 1:N **order** - Um cliente pode estar em varios pedidos; no modelo atual o pedido pode existir sem cliente identificado
+- **coupon** 1:N **order** - Um cupom pode ser usado em varios pedidos; no pedido o vinculo e opcional
 - **order** 1:N **order_item** - Um pedido tem vários itens
 - **order** 1:N **price_override_audit** - Um pedido pode ter várias auditorias de preço
 
-## Decisões de Design Pendentes
+## Gap Atual
 
-1. **Cupons do mercado**: De onde vem a informação dos cupons do sistema do mercado? (API/integração ou manual)
-2. **Funcionários**: Como será a validação de funcionários? (integração com sistema do mercado)
-3. **Estrutura de endereços do market**: Os campos de endereço estão adequados ou precisam de normalização?
+- `coupon.market_id` existe no banco/modelo, mas ainda nao referencia uma tabela `market`
+- Nao existe validacao no fluxo de compra para conferir se o cupom pertence a um mercado especifico
+- Tambem nao existe `market_id` em `order`, entao hoje nao ha como cruzar pedido x mercado no banco
 
 ## Notas
 
-- Produtos **não** são armazenados - vienen da API do Mercado Livre no momento da compra
-- Funcionários **não** são armazenados - vêm do sistema do mercado quando precisam autorizar alteração de preço
+- Produtos **não** são armazenados - vêm da API do Mercado Livre no momento da compra
+- O termo "mercado" no backend atual aparece como integracao externa com Mercado Livre, nao como entidade relacional
 
 ## Lógica de Pontos
 
 ### Cálculo de pontos ao confirmar compra:
 ```java
-// Se market.tem configuração de pontos: usar do market
-// Se não: usar padrão global (application.yml)
+// Usa configuracao global da aplicacao
 
 // Padrão global: R$ 5 = 1 ponto (bloco de 10 pts = R$ 50)
 int pontosGanhos = (valorTotal / taxaPorPonto) * pontosPorBloco;

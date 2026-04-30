@@ -100,7 +100,8 @@ Principais tabelas:
 - `order` - Pedidos
 - `order_item` - Itens do pedido
 - `coupon` - Cupons de desconto
-- `market` - Cadastro de mercados
+
+Observacao: o backend atual ainda nao possui tabela `market`; no momento, `coupon.market_id` existe apenas como identificador simples sem FK.
 
 [Ver diagrama ER →](database-er-diagram.md)
 

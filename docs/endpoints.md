@@ -152,9 +152,11 @@ GET /api/cupons
     "name": "Desconto R$10",
     "description": "Ganhe R$10 de desconto",
     "discountValue": 10.0,
-    "discountType": "fixed",
+    "percentageDiscount": false,
     "cost": 20,
-    "minimumPurchase": 50.0
+    "marketId": 3,
+    "minimumPurchase": 50.0,
+    "maximumDiscount": null
   }
 ]
 ```

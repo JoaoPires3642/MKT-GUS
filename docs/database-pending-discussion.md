@@ -2,7 +2,13 @@
 
 ## Contexto
 
-Preciso valider o modelo de banco de dados proposto com a equipe antes da implementação.
+Este documento descreve um modelo proposto para discussao com a equipe.
+Ele nao representa integralmente o estado atual implementado no backend.
+
+Estado atual relevante:
+- existe `coupon.market_id` como identificador simples
+- ainda nao existe tabela `market` no backend atual
+- ainda nao existe `market_id` em `order`
 
 ## Modelo Proposto
 
@@ -29,7 +35,8 @@ O banco foi simplificado para focar no que o MKT-GUS precisa:
 
 ## Arquivo com Diagrama
 
-Ver `docs/database-er-diagram.md`
+- Estado atual implementado: `docs/database-er-diagram.md`
+- Proposta discutida neste arquivo: expansao futura do modelo
 
 ---
 
