@@ -1,11 +1,25 @@
-# Database ER Diagram - Estado Atual
+# Database ER Diagram - Modelo Previsto
 
-> ✅ **IMPLEMENTADO**: Campo `market_id` adicionado à tabela `coupon` como identificador simples.
+> Modelo alvo de banco para o projeto, mantendo a mudanca recente de `coupon.market_id`.
 >
-> ⚠️ **IMPORTANTE**: No backend atual nao existe tabela `market` nem relacionamento JPA de `coupon` para `market`.
+> ⚠️ No backend atual, parte desse modelo ainda nao esta implementada integralmente.
 
 ```mermaid
 erDiagram
+    MARKET {
+        bigint id PK "ID autoincremento"
+        varchar nome
+        varchar rua
+        varchar numero
+        varchar bairro
+        varchar cidade
+        varchar estado
+        varchar cep
+        boolean ativo
+        decimal pontos_valor_por_ponto "R$ por ponto"
+        int pontos_por_bloco "Pontos por bloco"
+    }
+
     CUSTOMER {
         bigint cpf PK "CPF (chave primária)"
         int pontos
@@ -18,13 +32,14 @@ erDiagram
         decimal valor_desconto
         boolean desconto_em_porcentual
         int custo
-        bigint market_id "Identificador do mercado, sem FK"
+        bigint market_id FK "FK -> market(id)"
         decimal min_purchase
         decimal max_discount
     }
 
     ORDER {
         bigint id PK "ID autoincremento"
+        bigint market_id FK "FK -> market(id)"
         bigint id_cliente FK "FK -> customer(cpf)"
         bigint id_cupom FK "FK -> coupon(id), opcional"
         datetime data_hora
@@ -56,6 +71,8 @@ erDiagram
         datetime authorized_at
     }
 
+    MARKET ||--o{ ORDER : "possui"
+    MARKET ||--o{ COUPON : "disponibiliza"
     CUSTOMER ||--o{ ORDER : "faz"
     COUPON ||--o{ ORDER : "aplicado_em"
     ORDER ||--o{ ORDER_ITEM : "possui"
@@ -63,6 +80,21 @@ erDiagram
 ```
 
 ## Tabelas e Campos
+
+### market
+| Coluna | Tipo | Restrições |
+|--------|------|-------------|
+| id | BIGINT | PK, AUTO_INCREMENT |
+| nome | VARCHAR(100) | NOT NULL |
+| rua | VARCHAR(150) | |
+| numero | VARCHAR(20) | |
+| bairro | VARCHAR(100) | |
+| cidade | VARCHAR(100) | |
+| estado | VARCHAR(50) | |
+| cep | VARCHAR(20) | |
+| ativo | BOOLEAN | DEFAULT TRUE |
+| pontos_valor_por_ponto | DECIMAL | DEFAULT 5.00 |
+| pontos_por_bloco | INT | DEFAULT 10 |
 
 ### customer
 | Coluna | Tipo | Restrições |
@@ -79,7 +111,7 @@ erDiagram
 | valor_desconto | DECIMAL | NOT NULL |
 | desconto_em_porcentual | BOOLEAN | NOT NULL |
 | custo | INT | NOT NULL, mínimo 2 |
-| market_id | BIGINT | Nullable, sem FK no modelo atual |
+| market_id | BIGINT | FK -> market(id) |
 | min_purchase | DECIMAL | |
 | max_discount | DECIMAL | |
 
@@ -87,6 +119,7 @@ erDiagram
 | Coluna | Tipo | Restrições |
 |--------|------|-------------|
 | id | BIGINT | PK, AUTO_INCREMENT |
+| market_id | BIGINT | FK -> market(id), NOT NULL |
 | id_cliente | BIGINT | FK -> customer(cpf), nullable |
 | id_cupom | BIGINT | FK -> coupon(id), nullable |
 | data_hora | DATETIME | NOT NULL |
@@ -121,21 +154,23 @@ erDiagram
 
 ## Relacionamentos
 
-- **customer** 1:N **order** - Um cliente pode estar em varios pedidos; no modelo atual o pedido pode existir sem cliente identificado
+- **market** 1:N **order** - Cada mercado possui varios pedidos
+- **market** 1:N **coupon** - Cada mercado disponibiliza seus cupons
+- **customer** 1:N **order** - Um cliente pode estar em varios pedidos
 - **coupon** 1:N **order** - Um cupom pode ser usado em varios pedidos; no pedido o vinculo e opcional
 - **order** 1:N **order_item** - Um pedido tem vários itens
 - **order** 1:N **price_override_audit** - Um pedido pode ter várias auditorias de preço
 
-## Gap Atual
+## Status de Implementacao
 
-- `coupon.market_id` existe no banco/modelo, mas ainda nao referencia uma tabela `market`
-- Nao existe validacao no fluxo de compra para conferir se o cupom pertence a um mercado especifico
-- Tambem nao existe `market_id` em `order`, entao hoje nao ha como cruzar pedido x mercado no banco
+- `coupon.market_id` ja foi adicionado ao backend
+- a tabela/entidade `market` ainda precisa ser implementada no backend
+- `order.market_id` e a validacao de cupom por mercado ainda precisam ser implementados
 
 ## Notas
 
 - Produtos **não** são armazenados - vêm da API do Mercado Livre no momento da compra
-- O termo "mercado" no backend atual aparece como integracao externa com Mercado Livre, nao como entidade relacional
+- Produtos continuam vindo da API do Mercado Livre no fluxo atual
 
 ## Lógica de Pontos
 

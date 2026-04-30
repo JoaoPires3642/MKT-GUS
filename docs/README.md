@@ -96,12 +96,13 @@ O MKT-GUS suporta troca de integrações via configuração:
 
 Principais tabelas:
 
+- `market` - Cadastro de mercados
 - `customer` - Clientes (CPF + pontos)
 - `order` - Pedidos
 - `order_item` - Itens do pedido
 - `coupon` - Cupons de desconto
 
-Observacao: o backend atual ainda nao possui tabela `market`; no momento, `coupon.market_id` existe apenas como identificador simples sem FK.
+Observacao: o diagrama documenta o modelo previsto do sistema; no backend atual, `coupon.market_id` ja existe e o restante da modelagem de `market` ainda precisa ser concluido.
 
 [Ver diagrama ER →](database-er-diagram.md)
 
