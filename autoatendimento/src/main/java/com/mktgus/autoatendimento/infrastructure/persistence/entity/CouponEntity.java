@@ -31,6 +31,9 @@ public class CouponEntity {
     @Min(value = 2, message = "Custo do cupom em pontos deve ser no mínimo 2")
     private int custo;
 
+    @Column(name = "market_id")
+    private Long marketId;
+
     @Column(nullable = true)
     @Min(value = 0, message = "Valor mínimo de compra deve ser positivo")
     private Double minPurchase;

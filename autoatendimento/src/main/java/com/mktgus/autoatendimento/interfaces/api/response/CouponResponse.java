@@ -7,6 +7,7 @@ public record CouponResponse(
         double discountValue,
         boolean percentageDiscount,
         int cost,
+        Long marketId,
         Double minimumPurchase,
         Double maximumDiscount
 ) {

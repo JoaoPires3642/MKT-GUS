@@ -14,6 +14,7 @@ public final class CouponEntityMapper {
                 entity.getValorDesconto(),
                 entity.isDescontoEmPorcentual(),
                 entity.getCusto(),
+                entity.getMarketId(),
                 entity.getMinPurchase(),
                 entity.getMaxDiscount()
         );

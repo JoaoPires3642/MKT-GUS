@@ -33,7 +33,7 @@ class ConfirmPurchaseUseCaseTest {
         clientGateway.save(new Customer(12345678900L, 100));
 
         InMemoryCouponGateway couponGateway = new InMemoryCouponGateway();
-        couponGateway.coupons.put(1L, new Coupon(1L, "Cupom 10%", "", 10, true, 40, 100.0, 15.0));
+        couponGateway.coupons.put(1L, new Coupon(1L, "Cupom 10%", "", 10, true, 40, null, 100.0, 15.0));
 
         InMemoryOrderGateway orderGateway = new InMemoryOrderGateway();
         FindProductByBarcodeUseCase findProductByBarcodeUseCase = new FindProductByBarcodeUseCase(new InMemoryProductCatalogGateway());
@@ -68,7 +68,7 @@ class ConfirmPurchaseUseCaseTest {
         clientGateway.save(new Customer(12345678900L, 10));
 
         InMemoryCouponGateway couponGateway = new InMemoryCouponGateway();
-        couponGateway.coupons.put(1L, new Coupon(1L, "Cupom", "", 10, false, 20, null, null));
+        couponGateway.coupons.put(1L, new Coupon(1L, "Cupom", "", 10, false, 20, null, null, null));
 
         PontosConfig pontosConfig = new PontosConfig();
 
@@ -95,7 +95,7 @@ class ConfirmPurchaseUseCaseTest {
         clientGateway.save(new Customer(12345678900L, 100));
 
         InMemoryCouponGateway couponGateway = new InMemoryCouponGateway();
-        couponGateway.coupons.put(1L, new Coupon(1L, "Cupom", "", 10, true, 20, 200.0, null));
+        couponGateway.coupons.put(1L, new Coupon(1L, "Cupom", "", 10, true, 20, null, 200.0, null));
 
         PontosConfig pontosConfig = new PontosConfig();
 
