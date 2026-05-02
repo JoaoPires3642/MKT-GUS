@@ -1,0 +1,7 @@
+node_modules
+.next
+coverage
+dist
+vitest.config.ts.timestamp-*
+npm-debug.log*
+pnpm-debug.log*

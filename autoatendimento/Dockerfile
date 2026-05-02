@@ -23,8 +23,8 @@ COPY infra-data/src infra-data/src
 COPY web.ui/src web.ui/src
 COPY app/src app/src
 
-# Build the application
-RUN mvn clean package -DskipTests
+# Build the application (install dependencies first)
+RUN mvn clean install -DskipTests -DskipITs
 
 # Runtime stage
 FROM eclipse-temurin:21-jre-alpine

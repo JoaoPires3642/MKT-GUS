@@ -23,6 +23,13 @@ public class ApiExceptionHandler {
         return ResponseEntity.badRequest().body(new ApiMessage(exception.getMessage()));
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    @ApiResponse(responseCode = "400", description = "Erro de validação",
+            content = @Content(schema = @Schema(implementation = ApiMessage.class)))
+    public ResponseEntity<ApiMessage> handleIllegalArgument(IllegalArgumentException exception) {
+        return ResponseEntity.badRequest().body(new ApiMessage(exception.getMessage()));
+    }
+
     @ExceptionHandler(NotFoundException.class)
     @ApiResponse(responseCode = "404", description = "Recurso não encontrado",
             content = @Content(schema = @Schema(implementation = ApiMessage.class)))

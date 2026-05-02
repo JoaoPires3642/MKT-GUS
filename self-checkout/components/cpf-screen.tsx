@@ -14,6 +14,7 @@ interface CpfScreenProps {
 
 export default function CpfScreen({ onSubmit, onCancel }: CpfScreenProps) {
   const [cpf, setCpf] = useState("")
+  const [error, setError] = useState<string | null>(null)
 
   const formatCpf = (value: string) => {
     const numericValue = value.replace(/\D/g, "")
@@ -30,6 +31,9 @@ export default function CpfScreen({ onSubmit, onCancel }: CpfScreenProps) {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCpf(formatCpf(e.target.value))
+    if (error) {
+      setError(null)
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -50,10 +54,12 @@ export default function CpfScreen({ onSubmit, onCancel }: CpfScreenProps) {
           const pontos = data.pontos || 0
           onSubmit(cpf, pontos)
         } else {
-          console.error("Erro na requisição:", response.statusText)
+          const result = await response.json().catch(() => null)
+          setError(result?.message ?? "CPF inválido")
         }
       } catch (error) {
         console.error("Erro ao enviar CPF:", error)
+        setError("Não foi possível validar o CPF")
       }
     }
   }
@@ -81,6 +87,8 @@ export default function CpfScreen({ onSubmit, onCancel }: CpfScreenProps) {
               <h2 className="text-2xl font-bold">Digite seu CPF</h2>
               <p className="text-gray-500 text-base">Por favor, insira seu CPF para compras com desconto.</p>
             </div>
+
+            {error && <p className="text-center text-sm text-red-600">{error}</p>}
 
             <Input
                 type="text"
