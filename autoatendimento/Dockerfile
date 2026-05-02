@@ -3,14 +3,23 @@ FROM maven:3.9-eclipse-temurin-21-alpine AS build
 
 WORKDIR /app
 
-# Copy pom.xml first for better layer caching
+# Copy parent pom and all module poms first for better layer caching
 COPY pom.xml .
+COPY domain/pom.xml domain/
+COPY application/pom.xml application/
+COPY infra-utils/pom.xml infra-utils/
+COPY infra-data/pom.xml infra-data/
+COPY app/pom.xml app/
 
 # Download dependencies
 RUN mvn dependency:go-offline -B
 
 # Copy source code
-COPY src ./src
+COPY domain/src domain/src
+COPY application/src application/src
+COPY infra-utils/src infra-utils/src
+COPY infra-data/src infra-data/src
+COPY app/src app/src
 
 # Build the application
 RUN mvn clean package -DskipTests
@@ -26,7 +35,7 @@ RUN apk add --no-cache wget
 RUN addgroup -S spring && adduser -S spring -G spring
 
 # Copy the built jar from build stage
-COPY --from=build /app/target/*.jar app.jar
+COPY --from=build /app/app/target/autoatendimento-app-*.jar app.jar
 
 # Change ownership to non-root user
 RUN chown -R spring:spring /app
