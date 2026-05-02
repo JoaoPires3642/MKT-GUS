@@ -9,6 +9,7 @@ COPY domain/pom.xml domain/
 COPY application/pom.xml application/
 COPY infra-utils/pom.xml infra-utils/
 COPY infra-data/pom.xml infra-data/
+COPY web.ui/pom.xml web.ui/
 COPY app/pom.xml app/
 
 # Download dependencies
@@ -19,6 +20,7 @@ COPY domain/src domain/src
 COPY application/src application/src
 COPY infra-utils/src infra-utils/src
 COPY infra-data/src infra-data/src
+COPY web.ui/src web.ui/src
 COPY app/src app/src
 
 # Build the application
