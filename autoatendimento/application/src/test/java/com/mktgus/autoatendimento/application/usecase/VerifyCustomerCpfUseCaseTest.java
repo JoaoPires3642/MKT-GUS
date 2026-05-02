@@ -19,9 +19,9 @@ class VerifyCustomerCpfUseCaseTest {
         InMemoryClientGateway clientGateway = new InMemoryClientGateway();
         VerifyCustomerCpfUseCase useCase = new VerifyCustomerCpfUseCase(clientGateway);
 
-        Customer customer = useCase.execute(new VerifyCustomerCpfInput("123.456.789-00"));
+        Customer customer = useCase.execute(new VerifyCustomerCpfInput("529.982.247-25"));
 
-        assertEquals(12345678900L, customer.cpf());
+        assertEquals(52998224725L, customer.cpf());
         assertEquals(0, customer.points());
     }
 

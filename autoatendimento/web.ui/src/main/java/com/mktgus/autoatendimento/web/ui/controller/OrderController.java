@@ -1,9 +1,9 @@
-package com.mktgus.autoatendimento.infra.utils.controller;
+package com.mktgus.autoatendimento.web.ui.controller;
 
 import com.mktgus.autoatendimento.application.mapper.OrderApiMapper;
+import com.mktgus.autoatendimento.application.purchase.ConfirmPurchaseInput;
 import com.mktgus.autoatendimento.application.request.OrderRequest;
 import com.mktgus.autoatendimento.application.response.OrderResponse;
-import com.mktgus.autoatendimento.application.purchase.ConfirmPurchaseInput;
 import com.mktgus.autoatendimento.application.usecase.ConfirmPurchaseUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -11,7 +11,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/pedidos")

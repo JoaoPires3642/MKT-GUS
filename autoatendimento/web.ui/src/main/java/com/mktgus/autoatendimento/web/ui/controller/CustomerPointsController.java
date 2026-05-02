@@ -1,12 +1,16 @@
-package com.mktgus.autoatendimento.infra.utils.controller;
+package com.mktgus.autoatendimento.web.ui.controller;
 
 import com.mktgus.autoatendimento.application.points.UpdateCustomerPointsInput;
-import com.mktgus.autoatendimento.application.usecase.UpdateCustomerPointsUseCase;
 import com.mktgus.autoatendimento.application.request.CustomerPointsRequest;
+import com.mktgus.autoatendimento.application.usecase.UpdateCustomerPointsUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/pontos")
@@ -26,5 +30,6 @@ public class CustomerPointsController {
         return ResponseEntity.ok(new ResponseMessage("Compra finalizada com sucesso!"));
     }
 
-    public record ResponseMessage(String message) {}
+    public record ResponseMessage(String message) {
+    }
 }

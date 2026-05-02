@@ -1,8 +1,8 @@
-package com.mktgus.autoatendimento.infra.utils.controller;
+package com.mktgus.autoatendimento.web.ui.controller;
 
-import com.mktgus.autoatendimento.application.usecase.ListCouponsUseCase;
 import com.mktgus.autoatendimento.application.mapper.CouponApiMapper;
 import com.mktgus.autoatendimento.application.response.CouponResponse;
+import com.mktgus.autoatendimento.application.usecase.ListCouponsUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.CrossOrigin;

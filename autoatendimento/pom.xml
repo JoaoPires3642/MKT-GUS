@@ -17,6 +17,7 @@
 	<modules>
 		<module>domain</module>
 		<module>application</module>
+		<module>web.ui</module>
 		<module>infra-utils</module>
 		<module>infra-data</module>
 		<module>app</module>
@@ -37,6 +38,11 @@
 			<dependency>
 				<groupId>com.mktgus</groupId>
 				<artifactId>autoatendimento-application</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.mktgus</groupId>
+				<artifactId>autoatendimento-web-ui</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>

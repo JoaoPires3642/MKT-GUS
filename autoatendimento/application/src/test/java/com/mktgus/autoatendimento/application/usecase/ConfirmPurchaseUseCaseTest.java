@@ -31,7 +31,7 @@ class ConfirmPurchaseUseCaseTest {
     @Test
     void shouldApplyCouponRulesAndPersistUpdatedPoints() {
         InMemoryClientGateway clientGateway = new InMemoryClientGateway();
-        clientGateway.save(new Customer(12345678900L, 100));
+        clientGateway.save(new Customer(52998224725L, 100));
 
         InMemoryCouponGateway couponGateway = new InMemoryCouponGateway();
         couponGateway.coupons.put(1L, new Coupon(1L, "Cupom 10%", "", 10, true, 40, null, 100.0, 15.0));
@@ -58,7 +58,7 @@ class ConfirmPurchaseUseCaseTest {
         );
 
         ConfirmPurchaseOutput output = useCase.execute(new ConfirmPurchaseInput(
-                "123.456.789-00",
+                "529.982.247-25",
                 List.of(new ConfirmPurchaseInput.Item("789", 2, 60.0, null)),
                 new ConfirmPurchaseInput.Coupon(1L, "percentage")
         ));
@@ -66,13 +66,13 @@ class ConfirmPurchaseUseCaseTest {
         Order order = output.order();
         assertEquals(108.0, order.totalAmount());
         assertEquals(80, output.updatedPointsBalance());
-        assertEquals(80, clientGateway.findByCpf(12345678900L).orElseThrow().points());
+        assertEquals(80, clientGateway.findByCpf(52998224725L).orElseThrow().points());
     }
 
     @Test
     void shouldRejectCouponWhenCustomerDoesNotHaveEnoughPoints() {
         InMemoryClientGateway clientGateway = new InMemoryClientGateway();
-        clientGateway.save(new Customer(12345678900L, 10));
+        clientGateway.save(new Customer(52998224725L, 10));
 
         InMemoryCouponGateway couponGateway = new InMemoryCouponGateway();
         couponGateway.coupons.put(1L, new Coupon(1L, "Cupom", "", 10, false, 20, null, null, null));
@@ -94,7 +94,7 @@ class ConfirmPurchaseUseCaseTest {
         );
 
         assertThrows(ValidationException.class, () -> useCase.execute(new ConfirmPurchaseInput(
-                "12345678900",
+                "52998224725",
                 List.of(new ConfirmPurchaseInput.Item("789", 1, 60.0, null)),
                 new ConfirmPurchaseInput.Coupon(1L, "fixed")
         )));
@@ -103,7 +103,7 @@ class ConfirmPurchaseUseCaseTest {
     @Test
     void shouldRejectCouponBelowMinimumPurchase() {
         InMemoryClientGateway clientGateway = new InMemoryClientGateway();
-        clientGateway.save(new Customer(12345678900L, 100));
+        clientGateway.save(new Customer(52998224725L, 100));
 
         InMemoryCouponGateway couponGateway = new InMemoryCouponGateway();
         couponGateway.coupons.put(1L, new Coupon(1L, "Cupom", "", 10, true, 20, null, 200.0, null));
@@ -125,7 +125,7 @@ class ConfirmPurchaseUseCaseTest {
         );
 
         assertThrows(ValidationException.class, () -> useCase.execute(new ConfirmPurchaseInput(
-                "12345678900",
+                "52998224725",
                 List.of(new ConfirmPurchaseInput.Item("789", 1, 60.0, null)),
                 new ConfirmPurchaseInput.Coupon(1L, "percentage")
         )));
@@ -171,7 +171,7 @@ class ConfirmPurchaseUseCaseTest {
     @Test
     void shouldRejectCouponFromDifferentMarket() {
         InMemoryClientGateway clientGateway = new InMemoryClientGateway();
-        clientGateway.save(new Customer(12345678900L, 100));
+        clientGateway.save(new Customer(52998224725L, 100));
 
         InMemoryCouponGateway couponGateway = new InMemoryCouponGateway();
         couponGateway.coupons.put(1L, new Coupon(1L, "Cupom Outro Mercado", "", 10, true, 0, 99L, null, null));
@@ -191,7 +191,7 @@ class ConfirmPurchaseUseCaseTest {
         );
 
         assertThrows(ValidationException.class, () -> useCase.execute(new ConfirmPurchaseInput(
-                "12345678900",
+                "52998224725",
                 List.of(new ConfirmPurchaseInput.Item("789", 1, 60.0, null)),
                 new ConfirmPurchaseInput.Coupon(1L, "percentage")
         )));

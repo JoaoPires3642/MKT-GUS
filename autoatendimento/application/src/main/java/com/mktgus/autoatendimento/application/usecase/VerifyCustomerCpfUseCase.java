@@ -20,8 +20,15 @@ public class VerifyCustomerCpfUseCase {
     }
 
     private Long parseCpf(String rawCpf) {
+        if (rawCpf == null || rawCpf.isBlank()) {
+            throw new ValidationException("CPF invalido.");
+        }
+        String onlyDigits = rawCpf.replaceAll("\\D", "");
+        if (onlyDigits.length() != 11) {
+            throw new ValidationException("CPF invalido.");
+        }
         try {
-            return Long.parseLong(rawCpf.replaceAll("\\D", ""));
+            return Long.parseLong(onlyDigits);
         } catch (NumberFormatException exception) {
             throw new ValidationException("CPF invalido.");
         }

@@ -1,6 +1,7 @@
 package com.mktgus.autoatendimento.application.usecase;
 
 import com.mktgus.autoatendimento.application.cart.SaveCartInput;
+import com.mktgus.autoatendimento.application.exception.ValidationException;
 import com.mktgus.autoatendimento.application.gateway.CartCacheGateway;
 import com.mktgus.autoatendimento.application.cart.CartSnapshot;
 import org.springframework.stereotype.Service;
@@ -17,8 +18,14 @@ public class SaveCartUseCase {
     }
 
     public void execute(SaveCartInput input) {
+        if (input == null) {
+            throw new ValidationException("Carrinho invalido.");
+        }
         if (input.cpf() == null || input.cpf().isBlank()) {
-            return;
+            throw new ValidationException("CPF obrigatorio para salvar carrinho.");
+        }
+        if (input.items() == null || input.items().isEmpty()) {
+            throw new ValidationException("Carrinho vazio nao pode ser salvo.");
         }
         var items = input.items().stream()
                 .map(i -> new CartSnapshot.CartItemSnapshot(

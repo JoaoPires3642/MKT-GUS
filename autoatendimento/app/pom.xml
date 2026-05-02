@@ -21,6 +21,10 @@
         </dependency>
         <dependency>
             <groupId>com.mktgus</groupId>
+            <artifactId>autoatendimento-web-ui</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.mktgus</groupId>
             <artifactId>autoatendimento-infra-utils</artifactId>
         </dependency>
         <dependency>

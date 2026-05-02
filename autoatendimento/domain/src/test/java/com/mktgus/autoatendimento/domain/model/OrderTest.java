@@ -19,7 +19,7 @@ class OrderTest {
 
     @Test
     void isAnonymousShouldBeFalseWhenCpfIsPresent() {
-        Order order = new Order(1L, null, 12345678900L, null, NOW, 0.0, List.of());
+        Order order = new Order(1L, null, 52998224725L, null, NOW, 0.0, List.of());
         assertFalse(order.isAnonymous());
     }
 
@@ -34,9 +34,8 @@ class OrderTest {
     }
 
     @Test
-    void itemCountShouldReturnZeroForNullItems() {
-        Order order = new Order(1L, null, null, null, NOW, 0.0, null);
-        assertEquals(0, order.itemCount());
+    void shouldRejectNullItems() {
+        assertThrows(NullPointerException.class, () -> new Order(1L, null, null, null, NOW, 0.0, null));
     }
 
     @Test
@@ -50,8 +49,8 @@ class OrderTest {
     }
 
     @Test
-    void calculateSubtotalShouldReturnZeroForNullItems() {
-        Order order = new Order(1L, null, null, null, NOW, 0.0, null);
+    void calculateSubtotalShouldReturnZeroForEmptyItems() {
+        Order order = new Order(1L, null, null, null, NOW, 0.0, List.of());
         assertEquals(0.0, order.calculateSubtotal(), 0.001);
     }
 
