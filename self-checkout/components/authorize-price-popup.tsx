@@ -5,14 +5,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { PRICE_OVERRIDE_REASONS } from "@/lib/price-override-reasons"
 import type { PriceOverride, Product } from "@/lib/types"
-
-const PRICE_OVERRIDE_REASONS = [
-  { value: "ETIQUETA_PROMOCIONAL_NAO_ATUALIZADA", label: "Etiqueta promocional nao atualizada" },
-  { value: "PROMOCAO_NAO_SINCRONIZADA", label: "Promocao nao sincronizada" },
-  { value: "ETIQUETA_DESATUALIZADA", label: "Etiqueta desatualizada" },
-  { value: "AJUSTE_OPERACIONAL", label: "Ajuste operacional" },
-] as const
 
 interface AuthorizePricePopupProps {
   product: Product
@@ -63,6 +57,10 @@ export default function AuthorizePricePopup({ product, employeeRegistration, onC
 
         <div className="rounded-md bg-[#f0f7f3] p-4 text-sm text-[#2d5d3d]">
           Matrícula autorizada: {employeeRegistration}
+        </div>
+
+        <div className="rounded-md bg-amber-50 p-4 text-sm text-amber-800">
+          O cliente sera informado de que este item recebeu um ajuste manual autorizado.
         </div>
 
         <Input

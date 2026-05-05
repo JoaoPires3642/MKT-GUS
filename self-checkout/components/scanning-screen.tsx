@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { getPriceOverrideReasonLabel } from "@/lib/price-override-reasons"
 import type { Product, Coupon } from "@/lib/types"
 import { Beer, Award, Scan, Trash2, Barcode } from "lucide-react"
 import Image from "next/image"
@@ -213,7 +214,9 @@ export default function ScanningScreen({
                           <div className="font-medium text-base">{item.name}</div>
                           {item.priceOverride && (
                             <div className="text-sm text-[#2d5d3d]">
-                              Ajustado por matrícula {item.priceOverride.employeeRegistration}
+                              <div>Preco ajustado manualmente</div>
+                              <div>Autorizado por matrícula {item.priceOverride.employeeRegistration}</div>
+                              <div>Motivo: {getPriceOverrideReasonLabel(item.priceOverride.reason)}</div>
                             </div>
                           )}
                         </div>
@@ -283,6 +286,12 @@ export default function ScanningScreen({
                 {pointsToEarn > 0 && (
                     <div className="bg-[#f0f7f3] p-3 rounded-md text-[#2d5d3d] text-sm mt-2">
                       <span className="font-medium">Você ganhará {pointsToEarn} pontos com esta compra!</span>
+                    </div>
+                )}
+
+                {cart.some((item) => item.priceOverride) && (
+                    <div className="bg-amber-50 p-3 rounded-md text-amber-800 text-sm mt-2">
+                      <span className="font-medium">Ha item com preco ajustado manualmente por operador autorizado.</span>
                     </div>
                 )}
 

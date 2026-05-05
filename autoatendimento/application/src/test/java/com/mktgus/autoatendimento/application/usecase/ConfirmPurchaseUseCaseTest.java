@@ -169,6 +169,34 @@ class ConfirmPurchaseUseCaseTest {
     }
 
     @Test
+    void shouldRejectPriceOverrideWithInvalidReason() {
+        MercadoConfig mercadoConfig = new MercadoConfig();
+        mercadoConfig.setId(1L);
+
+        ConfirmPurchaseUseCase useCase = new ConfirmPurchaseUseCase(
+                new InMemoryOrderGateway(),
+                new InMemoryClientGateway(),
+                new InMemoryCouponGateway(),
+                new InMemoryEmployeeGateway(),
+                new InMemoryPriceOverrideAuditGateway(),
+                new FindProductByBarcodeUseCase(new InMemoryProductCatalogGateway()),
+                new PontosConfig(),
+                mercadoConfig
+        );
+
+        assertThrows(ValidationException.class, () -> useCase.execute(new ConfirmPurchaseInput(
+                null,
+                List.of(new ConfirmPurchaseInput.Item(
+                        "789",
+                        1,
+                        45.0,
+                        new ConfirmPurchaseInput.PriceOverride("12345", 45.0, "MOTIVO_LIVRE")
+                )),
+                null
+        )));
+    }
+
+    @Test
     void shouldRejectCouponFromDifferentMarket() {
         InMemoryClientGateway clientGateway = new InMemoryClientGateway();
         clientGateway.save(new Customer(52998224725L, 100));

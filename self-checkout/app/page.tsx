@@ -41,9 +41,10 @@ export default function Home() {
   useEffect(() => { //função de calcular os pontos (deve vir do backend no futuro)
     // Por enquanto usa config local - no futuro buscar de /api/config/pontos
     const PONTOS_VALOR_POR_PONTO = 5.0
+    const PONTOS_VALOR_PONTO = PONTOS_VALOR_POR_PONTO
     const PONTOS_POR_BLOCO = 10
     const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
-    const blocos = Math.floor(subtotal / PONTOS_VALOR_POR_PONTO)
+    const blocos = Math.floor(subtotal / PONTOS_VALOR_PONTO)
     const newPointsToEarn = blocos * PONTOS_POR_BLOCO
     setPointsToEarn(newPointsToEarn)
   }, [cart])
@@ -250,7 +251,7 @@ export default function Home() {
       }
     }))
     setSelectedProductForPriceAdjust(null)
-    setNotification("Preço ajustado com autorização do funcionário.")
+    setNotification(`Preco ajustado manualmente pela matricula ${priceOverride.employeeRegistration}.`)
   }
 
   const handlePaymentConfirm = async () => {
@@ -359,6 +360,7 @@ export default function Home() {
           if (employeeResponse.data.valid) {
             setEmployeeRegistration(barcode)
             setShowEmployeeCartPopup(true)
+            setNotification(`Matricula ${barcode} validada. Selecione um item para ajustar.`)
             return
           }
         } catch {
@@ -453,7 +455,6 @@ export default function Home() {
                     pointsBalance={pointsBalance}
                     onApplyCoupon={handleApplyCoupon}
                     appliedCoupon={appliedCoupon}
-                    setPointsBalance={setPointsBalance}
                     subtotal={cart.reduce((sum, item) => sum + item.price * item.quantity, 0)} // Passe o subtotal
                 />
               </div>
