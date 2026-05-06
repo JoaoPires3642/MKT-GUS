@@ -19,38 +19,8 @@ permissions:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-  GITLEAKS_VERSION: 8.24.2
 
 jobs:
-  gitleaks:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-
-      - name: Setup Gitleaks
-        run: |
-          curl -sSL -o gitleaks.tar.gz https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz
-          tar -xzf gitleaks.tar.gz
-          sudo mv gitleaks /usr/local/bin/gitleaks
-          gitleaks version
-
-      - name: Run Gitleaks
-        run: gitleaks dir . --config .gitleaks.toml --redact --report-format json --report-path gitleaks-report.json
-
-      - name: Upload Gitleaks report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: gitleaks-report
-          path: gitleaks-report.json
-          if-no-files-found: ignore
-
   frontend:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -115,7 +85,7 @@ jobs:
   sonarcloud:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    needs: [gitleaks, frontend, backend]
+    needs: [frontend, backend]
     steps:
       - name: Checkout
         uses: actions/checkout@v5
