@@ -1,0 +1,13 @@
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Allow SonarCloud public identifiers"
+regexes = [
+  '''joaopires3642''',
+  '''JoaoPires3642_MKT-GUS'''
+]
+paths = [
+  '''^\.github/workflows/ci\.yml$''',
+  '''^sonar-project\.properties$'''
+]
