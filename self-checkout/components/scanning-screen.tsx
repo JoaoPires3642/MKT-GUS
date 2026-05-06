@@ -157,7 +157,7 @@ export default function ScanningScreen({
           <Card className="border-2">
             <CardContent className="p-6">
               <div className="flex items-center gap-3 mb-2">
-                <Scan className="h-6 w-6 text-[#2d5d3d]" />
+                <Scan className="h-6 w-6 text-primary" />
                 <h2 className="text-2xl font-bold">Escaneie seus produtos</h2>
               </div>
               <p className="text-base text-gray-500">Posicione o código de barras em frente ao leitor</p>
@@ -167,7 +167,7 @@ export default function ScanningScreen({
           <div className="flex gap-4">
             <Button
                 variant="outline"
-                className="flex-1 py-6 bg-[#2d5d3d] hover:bg-[#224731] text-white text-lg"
+                className="flex-1 py-6 text-lg"
                 onClick={onMyPointsClick}
             >
               <Award className="mr-2 h-5 w-5" /> Meus Pontos
@@ -175,7 +175,7 @@ export default function ScanningScreen({
 
             <Button
                 variant="outline"
-                className="flex-1 py-6 bg-[#2d5d3d] hover:bg-[#224731] text-white text-lg"
+                className="flex-1 py-6 text-lg"
                 onClick={onBarcodeInputClick}
             >
               <Barcode className="mr-2 h-5 w-5" /> Inserir Código
@@ -213,7 +213,7 @@ export default function ScanningScreen({
                         <div>
                           <div className="font-medium text-base">{item.name}</div>
                           {item.priceOverride && (
-                            <div className="text-sm text-[#2d5d3d]">
+                            <div className="text-sm text-primary">
                               <div>Preco ajustado manualmente</div>
                               <div>Autorizado por matrícula {item.priceOverride.employeeRegistration}</div>
                               <div>Motivo: {getPriceOverrideReasonLabel(item.priceOverride.reason)}</div>
@@ -270,7 +270,7 @@ export default function ScanningScreen({
 
                 {appliedCoupon && (
                     <div className="flex flex-col gap-1">
-                      <div className="flex justify-between text-base text-[#2d5d3d]">
+                      <div className="flex justify-between text-base text-primary">
                         <span>Desconto ({appliedCoupon.name})</span>
                         <span>- R$ {calculateDiscount().toFixed(2).replace(".", ",")}</span>
                       </div>
@@ -284,7 +284,7 @@ export default function ScanningScreen({
                 </div>
 
                 {pointsToEarn > 0 && (
-                    <div className="bg-[#f0f7f3] p-3 rounded-md text-[#2d5d3d] text-sm mt-2">
+                    <div className="bg-primary/10 p-3 rounded-md text-primary text-sm mt-2">
                       <span className="font-medium">Você ganhará {pointsToEarn} pontos com esta compra!</span>
                     </div>
                 )}
@@ -297,7 +297,7 @@ export default function ScanningScreen({
 
                 <Button
                     onClick={onCheckout}
-                    className="w-full bg-[#2d5d3d] hover:bg-[#224731] text-white py-4 text-base mt-4"
+                    className="w-full py-4 text-base mt-4"
                 >
                   Finalizar
                 </Button>
@@ -309,7 +309,7 @@ export default function ScanningScreen({
             </CardContent>
           </Card>
 
-          <Button onClick={onAddBeerClick} className="w-full bg-[#2d5d3d] hover:bg-[#224731] text-white py-4 text-base">
+          <Button onClick={onAddBeerClick} className="w-full py-4 text-base">
             <Beer className="mr-2 h-4 w-4" /> Adicionar Cerveja
           </Button>
         </div>

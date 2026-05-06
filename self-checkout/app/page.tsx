@@ -1,8 +1,5 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import axios from "axios"
-import { Client } from "@stomp/stompjs"
 import WelcomeScreen from "@/components/welcome-screen"
 import CpfScreen from "@/components/cpf-screen"
 import ScanningScreen from "@/components/scanning-screen"
@@ -16,471 +13,139 @@ import PointsBlockedPopup from "@/components/points-blocked-popup"
 import MyPointsPopup from "@/components/my-points-popup"
 import CpfInputPopup from "@/components/cpf-input-popup"
 import BarcodeInputPopup from "@/components/barcode-input-popup"
-import type { Product, Coupon, PriceOverride } from "@/lib/types"
+import { useSelfCheckout } from "@/hooks/use-self-checkout"
+import type { Product } from "@/lib/types"
 
 export default function Home() {
-  const [currentScreen, setCurrentScreen] = useState<"welcome" | "scanning" | "payment" | "success">("welcome")
-  const [showCpfPopup, setShowCpfPopup] = useState(false)
-  const [showCancelPopup, setShowCancelPopup] = useState(false)
-  const [showAgeVerificationPopup, setShowAgeVerificationPopup] = useState(false)
-  const [showPointsBlockedPopup, setShowPointsBlockedPopup] = useState(false)
-  const [showMyPointsPopup, setShowMyPointsPopup] = useState(false)
-  const [showCpfInputPopup, setShowCpfInputPopup] = useState(false)
-  const [showBarcodeInputPopup, setShowBarcodeInputPopup] = useState(false)
-  const [employeeRegistration, setEmployeeRegistration] = useState<string | null>(null)
-  const [showEmployeeCartPopup, setShowEmployeeCartPopup] = useState(false)
-  const [selectedProductForPriceAdjust, setSelectedProductForPriceAdjust] = useState<Product | null>(null)
-  const [cpf, setCpf] = useState("")
-  const [cart, setCart] = useState<Product[]>([])
-  const [hasCpf, setHasCpf] = useState(false)
-  const [pointsBalance, setPointsBalance] = useState(1000)
-  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null)
-  const [pointsToEarn, setPointsToEarn] = useState(0)
-  const [notification, setNotification] = useState<string | null>(null)
+  const { actions, state } = useSelfCheckout()
 
-  useEffect(() => { //função de calcular os pontos (deve vir do backend no futuro)
-    // Por enquanto usa config local - no futuro buscar de /api/config/pontos
-    const PONTOS_VALOR_POR_PONTO = 5.0
-    const PONTOS_VALOR_PONTO = PONTOS_VALOR_POR_PONTO
-    const PONTOS_POR_BLOCO = 10
-    const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
-    const blocos = Math.floor(subtotal / PONTOS_VALOR_PONTO)
-    const newPointsToEarn = blocos * PONTOS_POR_BLOCO
-    setPointsToEarn(newPointsToEarn)
-  }, [cart])
-
-
-  useEffect(() => {
-    if (notification) {
-      const timer = setTimeout(() => setNotification(null), 3000)
-      return () => clearTimeout(timer)
+  const handleCheckout = () => {
+    if (state.cart.length === 0) {
+      actions.setNotification("Adicione ao menos um item para continuar.")
+      return
     }
-  }, [notification])
 
-  // Configurar WebSocket com @stomp/stompjs
-  useEffect(() => {
-    const stompClient = new Client({
-      brokerURL: "ws://localhost:8080/ws",
-      reconnectDelay: 5000,
-      heartbeatIncoming: 4000,
-      heartbeatOutgoing: 4000,
-      onConnect: () => {
-        stompClient.subscribe("/topic/scanned-product", (message) => {
-          const data = JSON.parse(message.body)
-          if (data.ean) {
-            // Produto recebido
-            const newProduct: Product = {
-              id: Date.now(),
-              name: data.name ?? data.nome,
-              price: data.price ?? data.valor,
-              quantity: 1,
-              image: data.imageUrl ?? data.urlImagem,
-              ean: data.ean,
-              isAdult: data.adultOnly ?? data.produtoMaiorDeIdade,
-            }
-            addProduct(newProduct)
-          } else if (data.message) {
-            // Mensagem de erro
-          //  setNotification(data.message)
-          }
-        })
-      },
-      onStompError: (frame) => {
-        //console.error("Erro na conexão WebSocket:", frame)
-      },
-    })
-
-    stompClient.activate()
-
-    return () => {
-      stompClient.deactivate()
-    }
-  }, [])
-
-  const handleStartShopping = () => {
-    setShowCpfPopup(true)
-  }
-
-// Update the handleCpfSubmit function to close popup and go to scanning
-  const handleCpfSubmit = async (value: string) => {
-    setCpf(value)
-    setHasCpf(value.trim() !== "")
-    setShowCpfPopup(false)
-    setCurrentScreen("scanning")
-
-    // Fazer uma requisição para o backend para obter os pontos do cliente
-    try {
-      const response = await fetch("http://localhost:8080/pessoa/verificar-cpf", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ cpf: value }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Erro ao verificar CPF");
-      }
-
-      const data = await response.json();
-      setPointsBalance(data); // Atualiza o saldo de pontos com a resposta do backend
-    } catch (error) {
-      console.error("Erro ao buscar pontos do cliente:", error);
-    }
-  }
-
-  const handleCpfInputSubmit = (value: string) => {
-    setCpf(value)
-    setHasCpf(value.trim() !== "")
-    setShowCpfInputPopup(false)
-    setShowMyPointsPopup(true)
-  }
-
-  const handleCancelClick = () => {
-    setShowCancelPopup(true)
-  }
-
-  const handleCancelConfirm = (confirmed: boolean) => {
-    setShowCancelPopup(false)
-    if (confirmed) {
-
-      //limpa o carrinho e cupom
-      setCart([])
-      setAppliedCoupon(null)
-      setCurrentScreen("welcome") //volta para o inico
-    }
-  }
-
-  const handleAddBeerClick = () => {
-    setShowAgeVerificationPopup(true)
-  }
-
-  const handleAgeVerificationConfirm = async () => {
-    setShowAgeVerificationPopup(false);
-    try {
-      // Fazer requisição POST para buscar o produto com o EAN especificado
-      const response = await axios.post("http://localhost:8080/produtos/buscar", {
-        barcode: "07896045506248",
-      });
-
-      const data = response.data;
-      if (data.ean) {
-        // Produto recebido
-        const newProduct: Product = {
-          id: Date.now(),
-          name: data.name || data.nome || "Beck's Beer",
-          price: data.price || data.valor || 4.5,
-          quantity: 1,
-          image: data.imageUrl || data.urlImagem || "",
-          ean: data.ean,
-          isAdult: data.adultOnly ?? data.produtoMaiorDeIdade ?? true,
-        };
-        addProduct(newProduct);
-      } else {
-        setNotification(data.message || "Produto não encontrado.");
-      }
-    } catch (error) {
-      console.error("Erro ao buscar cerveja:", error);
-      setNotification("Erro ao adicionar cerveja. Tente novamente.");
-    }
-  };
-
-  const handleAgeVerificationCancel = () => {
-    setShowAgeVerificationPopup(false)
+    actions.setCurrentScreen("payment")
   }
 
   const handleMyPointsClick = () => {
-    if (!hasCpf) {
-      setShowPointsBlockedPopup(true)
-    } else {
-      setShowMyPointsPopup(true)
-    }
-  }
-
-  const handlePointsBlockedClose = () => {
-    setShowPointsBlockedPopup(false)
-  }
-
-  const handleInsertCpf = () => {
-    setShowPointsBlockedPopup(false)
-    setShowCpfInputPopup(true)
-  }
-
-  const handleCpfInputCancel = () => {
-    setShowCpfInputPopup(false)
-  }
-
-  const handleApplyCoupon = (coupon: Coupon) => {
-    const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    if (pointsBalance < (coupon.pointsCost || 0)) {
-      setNotification("Saldo de pontos insuficiente para aplicar este cupom.");
-      return;
-    }
-    if (coupon.minPurchase && subtotal < coupon.minPurchase) {
-      setNotification(`O valor da compra (R$${subtotal.toFixed(2)}) é menor que o mínimo necessário (R$${coupon.minPurchase.toFixed(2)}).`);
-      return;
-    }
-    setAppliedCoupon(coupon);
-  };
-
-  const handleCheckout = () => {
-    if (cart.length === 0) {
-      setNotification("Adicione ao menos um item para continuar.")
+    if (!state.hasCpf) {
+      actions.setShowPointsBlockedPopup(true)
       return
     }
 
-    setCurrentScreen("payment")
+    actions.setShowMyPointsPopup(true)
+  }
+
+  const handleNewPurchase = () => {
+    actions.setCurrentScreen("welcome")
   }
 
   const handleOpenPriceAdjust = (product: Product) => {
-    setShowEmployeeCartPopup(false)
-    setSelectedProductForPriceAdjust(product)
-  }
-
-  const handleApplyPriceAdjust = (productId: number, newPrice: number, priceOverride: PriceOverride) => {
-    setCart((currentCart) => currentCart.map((item) => {
-      if (item.id !== productId) {
-        return item
-      }
-
-      return {
-        ...item,
-        originalPrice: item.originalPrice ?? item.price,
-        price: newPrice,
-        priceOverride,
-      }
-    }))
-    setSelectedProductForPriceAdjust(null)
-    setNotification(`Preco ajustado manualmente pela matricula ${priceOverride.employeeRegistration}.`)
-  }
-
-  const handlePaymentConfirm = async () => {
-    const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    const pointsDeducted = appliedCoupon ? (appliedCoupon.pointsCost || 0) : 0;
-
-    if (pointsDeducted > pointsBalance) {
-      setNotification("Saldo de pontos insuficiente para aplicar este cupom.");
-      return;
-    }
-
-      const pedidoPayload = {
-        clienteCpf: hasCpf && cpf ? cpf.replace(/\D/g, "") : null,
-        itens: cart.map((item) => ({
-          ean: item.ean,
-          quantidade: item.quantity,
-          valorUnitario: item.price,
-          ajustePreco: item.priceOverride
-            ? {
-                matriculaFuncionario: item.priceOverride.employeeRegistration,
-                valorAutorizado: item.priceOverride.authorizedUnitPrice,
-                motivo: item.priceOverride.reason,
-              }
-            : null,
-        })),
-      cupom: appliedCoupon
-          ? {
-            id: parseInt(appliedCoupon.id),
-            desconto: appliedCoupon.value, // Enviar o valor bruto
-            tipoDesconto: appliedCoupon.type,
-          }
-          : null,
-    };
-
-    try {
-      // Primeira requisição: confirmar compra
-      const response = await fetch("http://localhost:8080/pedidos/confirmar-compra", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(pedidoPayload),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Erro ao confirmar o pedido");
-      }
-
-      const pedido = await response.json();
-      console.log("Pedido confirmado:", pedido);
-
-      if (typeof pedido.updatedPointsBalance === "number") {
-        setPointsBalance(pedido.updatedPointsBalance);
-      }
-
-      setCart([]);
-      setAppliedCoupon(null);
-      setCurrentScreen("success");
-    } catch (error: any) {
-      console.error("Erro ao processar pagamento:", error);
-      setNotification(error.message || "Erro ao finalizar a compra. Tente novamente.");
-    }
-  };
-
-  const handleNewPurchase = () => {
-    setCart([])
-    setAppliedCoupon(null)
-    setCurrentScreen("welcome")
-  }
-
-  const updateProductQuantity = (productId: number, newQuantity: number) => {
-    if (newQuantity <= 0) {
-      removeProduct(productId)
-      return
-    }
-    setCart(cart.map((item) => (item.id === productId ? { ...item, quantity: newQuantity } : item)))
-  }
-
-  const removeProduct = (productId: number) => {
-    setCart(cart.filter((item) => item.id !== productId))
-  }
-
-  const addProduct = (product: Product) => {
-    const existingProduct = cart.find((item) => item.ean === product.ean && !item.priceOverride && !product.priceOverride)
-    if (existingProduct) {
-      updateProductQuantity(existingProduct.id, existingProduct.quantity + 1)
-    } else {
-      setCart([...cart, product])
-    }
-  }
-
-  const handleBarcodeInputClick = () => {
-    setShowBarcodeInputPopup(true)
-  }
-
-  const handleBarcodeSubmit = async (barcode: string) => {
-    setShowBarcodeInputPopup(false)
-    try {
-      if (cart.length > 0) {
-        try {
-          const employeeResponse = await axios.post("http://localhost:8080/api/funcionarios/verificar-matricula", {
-            registration: barcode,
-          })
-
-          if (employeeResponse.data.valid) {
-            setEmployeeRegistration(barcode)
-            setShowEmployeeCartPopup(true)
-            setNotification(`Matricula ${barcode} validada. Selecione um item para ajustar.`)
-            return
-          }
-        } catch {
-          // segue para busca de produto se o codigo nao for matricula valida
-        }
-      }
-
-      const response = await axios.post("http://localhost:8080/produtos/buscar", { barcode })
-      const data = response.data
-
-      if (data.ean) {
-        addProduct({
-          id: Date.now(),
-          name: data.name ?? data.nome,
-          price: data.price ?? data.valor,
-          quantity: 1,
-          image: data.imageUrl ?? data.urlImagem,
-          ean: data.ean,
-          isAdult: data.adultOnly ?? data.produtoMaiorDeIdade,
-        })
-        return
-      }
-
-      setNotification(data.message || `Produto não encontrado para o código: ${barcode}`)
-    } catch (error) {
-      console.error("Erro ao buscar produto:", error)
-      setNotification(`Erro ao buscar produto para o código: ${barcode}`)
-    }
-  }
-
-  const handleBarcodeInputCancel = () => {
-    setShowBarcodeInputPopup(false)
+    actions.setShowEmployeeCartPopup(false)
+    actions.setSelectedProductForPriceAdjust(product)
   }
 
   return (
-      <main className="w-screen h-screen flex items-center justify-center bg-[#f8f7f2] overflow-hidden">
+      <main className="w-screen h-screen flex items-center justify-center bg-background overflow-hidden">
         <div className="w-full h-full max-w-[1920px] max-h-[1080px] flex items-center justify-center p-6">
-          {currentScreen === "welcome" && <WelcomeScreen onStartShopping={handleStartShopping} />}
-          {currentScreen === "scanning" && (
+          {state.notification && (
+              <div className="fixed top-4 left-1/2 z-50 -translate-x-1/2 rounded-md bg-black px-4 py-2 text-sm text-white shadow-lg">
+                {state.notification}
+              </div>
+          )}
+          {state.currentScreen === "welcome" && <WelcomeScreen onStartShopping={() => actions.setShowCpfPopup(true)} />}
+          {state.currentScreen === "scanning" && (
               <ScanningScreen
-                  cart={cart}
-                  onUpdateQuantity={updateProductQuantity}
-                  onRemoveProduct={removeProduct}
-                  onAddProduct={addProduct}
+                  cart={state.cart}
+                  onUpdateQuantity={actions.updateProductQuantity}
+                  onRemoveProduct={actions.removeProduct}
+                  onAddProduct={actions.addProduct}
                   onCheckout={handleCheckout}
-                  onCancel={handleCancelClick}
-                  onAddBeerClick={handleAddBeerClick}
+                  onCancel={() => actions.setShowCancelPopup(true)}
+                  onAddBeerClick={() => actions.setShowAgeVerificationPopup(true)}
                   onMyPointsClick={handleMyPointsClick}
-                  onBarcodeInputClick={handleBarcodeInputClick}
-                  appliedCoupon={appliedCoupon}
-                  pointsToEarn={pointsToEarn}
+                  onBarcodeInputClick={() => actions.setShowBarcodeInputPopup(true)}
+                  appliedCoupon={state.appliedCoupon}
+                  pointsToEarn={state.pointsToEarn}
               />
           )}
-          {currentScreen === "payment" && (
+          {state.currentScreen === "payment" && (
               <PaymentScreen
-                  onConfirm={handlePaymentConfirm}
-                  onBack={() => setCurrentScreen("scanning")}
-                  cpf={cpf}
-                  appliedCoupon={appliedCoupon}
+                  onConfirm={actions.handlePaymentConfirm}
+                  onBack={() => actions.setCurrentScreen("scanning")}
+                  cpf={state.cpf}
+                  appliedCoupon={state.appliedCoupon}
               />
           )}
-          {currentScreen === "success" && <SuccessScreen onNewPurchase={handleNewPurchase} />}
-          {showCpfPopup && (
+          {state.currentScreen === "success" && <SuccessScreen onNewPurchase={handleNewPurchase} />}
+          {state.showCpfPopup && (
               <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                <CpfScreen onSubmit={handleCpfSubmit} onCancel={() => setShowCpfPopup(false)} />
+                <CpfScreen onSubmit={actions.handleCpfSubmit} onCancel={() => actions.setShowCpfPopup(false)} />
               </div>
           )}
-          {showCancelPopup && (
+          {state.showCancelPopup && (
               <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                <CancelConfirmation onConfirm={handleCancelConfirm} />
+                <CancelConfirmation onConfirm={actions.handleCancelConfirm} />
               </div>
           )}
-          {showAgeVerificationPopup && (
+          {state.showAgeVerificationPopup && (
               <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                <AgeVerificationPopup onConfirm={handleAgeVerificationConfirm} onCancel={handleAgeVerificationCancel} />
+                <AgeVerificationPopup
+                    onConfirm={actions.handleAgeVerificationConfirm}
+                    onCancel={() => actions.setShowAgeVerificationPopup(false)}
+                />
               </div>
           )}
-          {showPointsBlockedPopup && (
+          {state.showPointsBlockedPopup && (
               <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                <PointsBlockedPopup onClose={handlePointsBlockedClose} onInsertCpf={handleInsertCpf} />
+                <PointsBlockedPopup
+                    onClose={() => actions.setShowPointsBlockedPopup(false)}
+                    onInsertCpf={() => {
+                      actions.setShowPointsBlockedPopup(false)
+                      actions.setShowCpfInputPopup(true)
+                    }}
+                />
               </div>
           )}
-          {showCpfInputPopup && (
+          {state.showCpfInputPopup && (
               <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                <CpfInputPopup onSubmit={handleCpfInputSubmit} onCancel={handleCpfInputCancel} />
+                <CpfInputPopup onSubmit={actions.handleCpfInputSubmit} onCancel={() => actions.setShowCpfInputPopup(false)} />
               </div>
           )}
-          {showMyPointsPopup && (
+          {state.showMyPointsPopup && (
               <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                 <MyPointsPopup
-                    onClose={() => setShowMyPointsPopup(false)}
-                    pointsBalance={pointsBalance}
-                    onApplyCoupon={handleApplyCoupon}
-                    appliedCoupon={appliedCoupon}
-                    subtotal={cart.reduce((sum, item) => sum + item.price * item.quantity, 0)} // Passe o subtotal
+                    onClose={() => actions.setShowMyPointsPopup(false)}
+                    pointsBalance={state.pointsBalance}
+                    onApplyCoupon={actions.handleApplyCoupon}
+                    appliedCoupon={state.appliedCoupon}
+                    subtotal={state.subtotal}
                 />
               </div>
           )}
-          {showBarcodeInputPopup && (
+          {state.showBarcodeInputPopup && (
               <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                <BarcodeInputPopup onSubmit={handleBarcodeSubmit} onCancel={handleBarcodeInputCancel} />
+                <BarcodeInputPopup onSubmit={actions.handleBarcodeSubmit} onCancel={() => actions.setShowBarcodeInputPopup(false)} />
               </div>
           )}
-          {showEmployeeCartPopup && employeeRegistration && (
+          {state.showEmployeeCartPopup && state.employeeRegistration && (
               <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                 <EmployeeCartPopup
-                    cart={cart}
-                    employeeRegistration={employeeRegistration}
+                    cart={state.cart}
+                    employeeRegistration={state.employeeRegistration}
                     onSelectProduct={handleOpenPriceAdjust}
-                    onClose={() => setShowEmployeeCartPopup(false)}
+                    onClose={() => actions.setShowEmployeeCartPopup(false)}
                 />
               </div>
           )}
-          {selectedProductForPriceAdjust && (
+          {state.selectedProductForPriceAdjust && (
               <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                 <AuthorizePricePopup
-                    product={selectedProductForPriceAdjust}
-                    employeeRegistration={employeeRegistration ?? ""}
-                    onCancel={() => setSelectedProductForPriceAdjust(null)}
-                    onConfirm={handleApplyPriceAdjust}
+                    product={state.selectedProductForPriceAdjust}
+                    employeeRegistration={state.employeeRegistration ?? ""}
+                    onCancel={() => actions.setSelectedProductForPriceAdjust(null)}
+                    onConfirm={actions.handleApplyPriceAdjust}
                 />
               </div>
           )}

@@ -88,7 +88,7 @@ export default function AgeVerificationPopup({ onConfirm, onCancel }: AgeVerific
                 </Button>
                 <Button
                     onClick={handleConfirm}
-                    className="bg-[#2d5d3d] hover:bg-[#224731] text-white px-6 py-3 rounded-md text-base"
+                    className="px-6 py-3 rounded-md text-base"
                     disabled={isLoading || !employeeId.trim()}
                 >
                   {isLoading ? "Verificando..." : "Confirmar"}
@@ -107,10 +107,7 @@ export default function AgeVerificationPopup({ onConfirm, onCancel }: AgeVerific
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
-              <Button
-                  onClick={() => setShowInvalidPopup(false)}
-                  className="bg-[#2d5d3d] hover:bg-[#224731] text-white"
-              >
+              <Button onClick={() => setShowInvalidPopup(false)}>
                 Fechar
               </Button>
             </DialogFooter>

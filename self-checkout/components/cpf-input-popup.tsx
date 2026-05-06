@@ -94,7 +94,7 @@ export default function CpfInputPopup({ onSubmit, onCancel }: CpfInputPopupProps
             </Button>
             <Button
               type="submit"
-              className="bg-[#2d5d3d] hover:bg-[#224731] text-white px-6 py-3 rounded-md text-base"
+              className="px-6 py-3 rounded-md text-base"
               disabled={cpf.replace(/\D/g, "").length !== 11}
             >
               Confirmar

@@ -27,17 +27,17 @@ export default function PaymentScreen({ onConfirm, onBack, cpf, appliedCoupon }:
         <div className="space-y-4">
           <Card
               className={`border-2 cursor-pointer transition-all ${
-                  selectedPaymentMethod === "card" ? "border-[#2d5d3d] bg-[#f0f7f3]" : "hover:border-[#2d5d3d]"
+                  selectedPaymentMethod === "card" ? "border-primary bg-primary/10" : "hover:border-primary"
               }`}
               onClick={() => handleSelectPaymentMethod("card")}
           >
             <CardContent className="p-6 flex justify-between items-center">
               <div className="flex items-center gap-3">
-                <CreditCard className="h-6 w-6 text-[#2d5d3d]" />
+                <CreditCard className="h-6 w-6 text-primary" />
                 <h3 className="text-lg font-medium">Cartão de Crédito/Débito</h3>
               </div>
               {selectedPaymentMethod === "card" && (
-                  <div className="w-6 h-6 rounded-full bg-[#2d5d3d] flex items-center justify-center">
+                  <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
                     <Check className="h-4 w-4 text-white" />
                   </div>
               )}
@@ -46,17 +46,17 @@ export default function PaymentScreen({ onConfirm, onBack, cpf, appliedCoupon }:
 
           <Card
               className={`border-2 cursor-pointer transition-all ${
-                  selectedPaymentMethod === "pix" ? "border-[#2d5d3d] bg-[#f0f7f3]" : "hover:border-[#2d5d3d]"
+                  selectedPaymentMethod === "pix" ? "border-primary bg-primary/10" : "hover:border-primary"
               }`}
               onClick={() => handleSelectPaymentMethod("pix")}
           >
             <CardContent className="p-6 flex justify-between items-center">
               <div className="flex items-center gap-3">
-                <QrCode className="h-6 w-6 text-[#2d5d3d]" />
+                <QrCode className="h-6 w-6 text-primary" />
                 <h3 className="text-lg font-medium">PIX</h3>
               </div>
               {selectedPaymentMethod === "pix" && (
-                  <div className="w-6 h-6 rounded-full bg-[#2d5d3d] flex items-center justify-center">
+                  <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
                     <Check className="h-4 w-4 text-white" />
                   </div>
               )}
@@ -75,7 +75,7 @@ export default function PaymentScreen({ onConfirm, onBack, cpf, appliedCoupon }:
 
           <Button
               onClick={onConfirm}
-              className="flex-1 bg-[#2d5d3d] hover:bg-[#224731] text-white py-4 text-base"
+              className="flex-1 py-4 text-base"
               disabled={selectedPaymentMethod === null}
           >
             Confirmar Pagamento

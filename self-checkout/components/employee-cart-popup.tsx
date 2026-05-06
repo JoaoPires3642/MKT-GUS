@@ -20,12 +20,12 @@ export default function EmployeeCartPopup({ cart, employeeRegistration, onSelect
           <p className="text-base text-gray-500">Matrícula validada: {employeeRegistration}. Selecione um item do carrinho para ajustar.</p>
         </div>
 
-        <div className="rounded-md bg-[#f0f7f3] p-4 text-sm text-[#2d5d3d]">
+        <div className="rounded-md bg-primary/10 p-4 text-sm text-primary">
           Modo autorizacao ativo. O proximo item selecionado recebera um ajuste manual identificado pela matricula {employeeRegistration}.
         </div>
 
         {cart.length === 0 ? (
-          <div className="rounded-md bg-[#f8f7f2] p-6 text-center text-gray-500">
+          <div className="rounded-md bg-muted p-6 text-center text-muted-foreground">
             Nenhum produto no carrinho para ajuste.
           </div>
         ) : (

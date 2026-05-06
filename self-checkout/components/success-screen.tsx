@@ -20,7 +20,7 @@ export default function SuccessScreen({ onNewPurchase }: SuccessScreenProps) {
 
       <Button
         onClick={onNewPurchase}
-        className="bg-[#2d5d3d] hover:bg-[#224731] text-white px-8 py-4 rounded-md text-lg mt-4"
+        className="px-8 py-4 rounded-md text-lg mt-4"
       >
         Nova Compra
       </Button>

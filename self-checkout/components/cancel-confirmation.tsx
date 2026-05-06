@@ -20,7 +20,7 @@ export default function CancelConfirmation({ onConfirm }: CancelConfirmationProp
             </Button>
             <Button
               onClick={() => onConfirm(false)}
-              className="bg-[#2d5d3d] hover:bg-[#224731] text-white px-6 py-3 rounded-md text-base"
+              className="px-6 py-3 rounded-md text-base"
             >
               Não
             </Button>

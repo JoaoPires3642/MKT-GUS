@@ -50,12 +50,12 @@ export default function AuthorizePricePopup({ product, employeeRegistration, onC
           <p className="text-base text-gray-500">Aplique um valor excepcional apenas para esta compra.</p>
         </div>
 
-        <div className="rounded-md bg-[#f0f7f3] p-4 text-sm text-[#2d5d3d]">
+        <div className="rounded-md bg-primary/10 p-4 text-sm text-primary">
           <div className="font-medium">{product.name}</div>
           <div>Preço de referência: R$ {referencePrice.toFixed(2).replace(".", ",")}</div>
         </div>
 
-        <div className="rounded-md bg-[#f0f7f3] p-4 text-sm text-[#2d5d3d]">
+        <div className="rounded-md bg-primary/10 p-4 text-sm text-primary">
           Matrícula autorizada: {employeeRegistration}
         </div>
 
@@ -89,7 +89,7 @@ export default function AuthorizePricePopup({ product, employeeRegistration, onC
           <Button type="button" variant="destructive" onClick={onCancel}>
             Cancelar
           </Button>
-          <Button type="button" className="bg-[#2d5d3d] hover:bg-[#224731] text-white" onClick={handleConfirm}>
+          <Button type="button" onClick={handleConfirm}>
             Aplicar ajuste
           </Button>
         </div>

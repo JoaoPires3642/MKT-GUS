@@ -103,7 +103,7 @@ export default function CpfScreen({ onSubmit, onCancel }: CpfScreenProps) {
             <div className="flex flex-col gap-3">
               <Button
                   type="submit"
-                  className="w-full bg-[#2d5d3d] hover:bg-[#224731] text-white py-3 text-base rounded-md"
+                  className="w-full py-3 text-base rounded-md"
                   disabled={cpf.replace(/\D/g, "").length !== 11}
               >
                 Continuar
@@ -113,7 +113,7 @@ export default function CpfScreen({ onSubmit, onCancel }: CpfScreenProps) {
                   type="button"
                   variant="outline"
                   onClick={handleContinueWithoutCpf}
-                  className="w-full border-[#2d5d3d] text-[#2d5d3d] hover:bg-[#f0f7f3] py-3 text-base rounded-md"
+                  className="w-full border-primary text-primary hover:bg-primary/10 py-3 text-base rounded-md"
               >
                 Continuar sem CPF
               </Button>

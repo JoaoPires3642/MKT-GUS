@@ -29,7 +29,7 @@ export default function BarcodeInputPopup({ onSubmit, onCancel }: BarcodeInputPo
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-3 text-center">
             <div className="flex justify-center mb-2">
-              <Barcode className="h-10 w-10 text-[#2d5d3d]" />
+              <Barcode className="h-10 w-10 text-primary" />
             </div>
             <h2 className="text-2xl font-bold">Inserir Código de Barras</h2>
             <p className="text-gray-500 text-base">Digite o código de barras do produto manualmente.</p>
@@ -50,7 +50,7 @@ export default function BarcodeInputPopup({ onSubmit, onCancel }: BarcodeInputPo
             </Button>
             <Button
               type="submit"
-              className="bg-[#2d5d3d] hover:bg-[#224731] text-white px-6 py-3 rounded-md text-base"
+              className="px-6 py-3 rounded-md text-base"
               disabled={!barcode.trim()}
             >
               Adicionar

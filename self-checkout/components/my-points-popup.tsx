@@ -100,21 +100,21 @@ export default function MyPointsPopup({ onClose, pointsBalance, onApplyCoupon, a
                           key={coupon.id}
                           className={`border-2 rounded-lg p-4 transition-all ${
                               selectedCoupon?.id === coupon.id
-                                  ? "border-[#2d5d3d] bg-[#f0f7f3]"
+                                  ? "border-primary bg-primary/10"
                                   : isBlocked
                                       ? "opacity-50 cursor-not-allowed"
-                                      : "hover:border-[#2d5d3d] cursor-pointer"
+                                      : "hover:border-primary cursor-pointer"
                           }`}
                           onClick={() => !isBlocked && handleSelectCoupon(coupon)}
                       >
                         <div className="flex items-start gap-3">
-                          <div className="bg-[#f0f7f3] p-2 rounded-md">
-                            <Ticket className="h-6 w-6 text-[#2d5d3d]" />
+                          <div className="bg-primary/10 p-2 rounded-md">
+                            <Ticket className="h-6 w-6 text-primary" />
                           </div>
                           <div className="flex-1">
                             <h3 className="font-medium">{coupon.name}</h3>
                             <p className="text-sm text-gray-500">{coupon.description}</p>
-                            <div className="mt-2 text-sm font-medium text-[#2d5d3d]">{coupon.pointsCost} pontos</div>
+                            <div className="mt-2 text-sm font-medium text-primary">{coupon.pointsCost} pontos</div>
                             {coupon.type === "percentage" && coupon.maxDiscount && (
                                 <p className="text-sm text-gray-500">
                                   Desconto máximo: R${coupon.maxDiscount.toFixed(2)}
@@ -143,7 +143,7 @@ export default function MyPointsPopup({ onClose, pointsBalance, onApplyCoupon, a
             </Button>
             <Button
                 onClick={handleApplyCoupon}
-                className="flex-1 bg-[#2d5d3d] hover:bg-[#224731] text-white py-3"
+                className="flex-1 py-3"
                 disabled={!selectedCoupon}
             >
               Aplicar Cupom
