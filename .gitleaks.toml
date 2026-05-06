@@ -2,6 +2,12 @@
 useDefault = true
 
 [[allowlists]]
+description = "Ignore generated Next.js artifacts"
+paths = [
+  '''^self-checkout/\.next/.*'''
+]
+
+[[allowlists]]
 description = "Allow SonarCloud public identifiers"
 regexes = [
   '''joaopires3642''',
