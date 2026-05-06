@@ -1,3 +1,5 @@
 .github/workflows/ci.yml:generic-api-key:134
+.github/workflows/ci.yml:generic-api-key:152
 sonar-project.properties:generic-api-key:2
 self-checkout/.next/prerender-manifest.json:generic-api-key:1
+README.md:sidekiq-secret:50
