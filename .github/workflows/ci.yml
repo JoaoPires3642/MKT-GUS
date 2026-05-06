@@ -145,8 +145,12 @@ jobs:
         run: pnpm install --frozen-lockfile
         working-directory: self-checkout
 
+      - name: Compile backend for SonarCloud
+        run: mvn -B -DskipTests compile
+        working-directory: autoatendimento
+
       - name: SonarCloud Scan
-        uses: SonarSource/sonarqube-scan-action@v5
+        uses: SonarSource/sonarqube-scan-action@v6
         with:
           args: >
             -Dsonar.projectKey=JoaoPires3642_MKT-GUS
