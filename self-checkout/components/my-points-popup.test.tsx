@@ -1,18 +1,19 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import MyPointsPopup from "@/components/my-points-popup"
+
 describe("MyPointsPopup", () => {
   it("loads coupons and applies selected coupon", async () => {
     const onApplyCoupon = vi.fn()
     const couponPayload = [
       {
         id: 1,
-        nome: "Cupom 10%",
-        descricao: "Desconto teste",
-        descontoEmPorcentual: true,
-        valorDesconto: 10,
-        custo: 100,
-        minPurchase: 20,
-        maxDiscount: 30,
+        name: "Cupom 10%",
+        description: "Desconto teste",
+        percentageDiscount: true,
+        discountValue: 10,
+        cost: 100,
+        minimumPurchase: 20,
+        maximumDiscount: 30,
       },
     ]
     vi.stubGlobal(
@@ -55,11 +56,11 @@ describe("MyPointsPopup", () => {
         json: async () => [
           {
             id: 1,
-            nome: "Cupom caro",
-            descricao: "Sem saldo",
-            descontoEmPorcentual: false,
-            valorDesconto: 20,
-            custo: 500,
+            name: "Cupom caro",
+            description: "Sem saldo",
+            percentageDiscount: false,
+            discountValue: 20,
+            cost: 500,
           },
         ],
       })

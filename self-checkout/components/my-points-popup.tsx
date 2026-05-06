@@ -32,13 +32,13 @@ export default function MyPointsPopup({ onClose, pointsBalance, onApplyCoupon, a
 
         const mappedCoupons: Coupon[] = data.map((cupom: any) => ({
           id: cupom.id.toString(),
-          name: cupom.nome,
-          description: cupom.descricao,
-          type: cupom.descontoEmPorcentual ? "percentage" : "fixed",
-          value: cupom.valorDesconto,
-          pointsCost: cupom.custo,
-          minPurchase: cupom.minPurchase || undefined,
-          maxDiscount: cupom.maxDiscount || undefined,
+          name: cupom.name,
+          description: cupom.description,
+          type: cupom.percentageDiscount ? "percentage" : "fixed",
+          value: cupom.discountValue,
+          pointsCost: cupom.cost,
+          minPurchase: cupom.minimumPurchase || undefined,
+          maxDiscount: cupom.maximumDiscount || undefined,
         }));
 
         setAvailableCoupons(mappedCoupons);

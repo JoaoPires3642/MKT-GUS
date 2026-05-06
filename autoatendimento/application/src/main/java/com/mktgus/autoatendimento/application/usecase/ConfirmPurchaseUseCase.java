@@ -2,6 +2,7 @@ package com.mktgus.autoatendimento.application.usecase;
 
 import com.mktgus.autoatendimento.application.purchase.ConfirmPurchaseInput;
 import com.mktgus.autoatendimento.application.purchase.ConfirmPurchaseOutput;
+import com.mktgus.autoatendimento.application.purchase.PriceOverrideReason;
 import com.mktgus.autoatendimento.application.exception.NotFoundException;
 import com.mktgus.autoatendimento.application.exception.ValidationException;
 import com.mktgus.autoatendimento.application.gateway.ClientGateway;
@@ -145,6 +146,10 @@ public class ConfirmPurchaseUseCase {
 
         if (priceOverride.reason() == null || priceOverride.reason().isBlank()) {
             throw new ValidationException("Motivo do ajuste de preco e obrigatorio.");
+        }
+
+        if (!PriceOverrideReason.isValid(priceOverride.reason())) {
+            throw new ValidationException("Motivo do ajuste de preco invalido.");
         }
 
         if (priceOverride.authorizedUnitPrice() <= 0) {
