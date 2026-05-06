@@ -2,9 +2,7 @@
 useDefault = true
 
 [[allowlists]]
-description = "Allow SonarCloud public identifiers"
+description = "Allow SonarCloud project key in CI workflow"
 targetRules = ["generic-api-key"]
-regexes = [
-  '''JoaoPires3642_MKT-GUS''',
-  '''joaopires3642'''
-]
+paths = ['''.*\.github/workflows/ci\.yml''']
+regexes = ['''JoaoPires3642_MKT-GUS''']
