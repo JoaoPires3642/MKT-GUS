@@ -34,7 +34,7 @@ jobs:
           gitleaks version
 
       - name: Run Gitleaks
-        run: gitleaks dir . --config .gitleaks.toml --no-git --redact
+        run: gitleaks dir . --config .gitleaks.toml --redact
 
   frontend:
     runs-on: ubuntu-latest
