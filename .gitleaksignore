@@ -1,0 +1,3 @@
+.github/workflows/ci.yml:generic-api-key:134
+sonar-project.properties:generic-api-key:2
+self-checkout/.next/prerender-manifest.json:generic-api-key:1
