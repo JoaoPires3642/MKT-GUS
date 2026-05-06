@@ -54,6 +54,10 @@ jobs:
         run: pnpm test
         working-directory: self-checkout
 
+      - name: Run frontend coverage
+        run: pnpm test:coverage
+        working-directory: self-checkout
+
       - name: Build frontend
         run: pnpm build
         working-directory: self-checkout
@@ -75,7 +79,7 @@ jobs:
           cache: maven
 
       - name: Test backend
-        run: mvn -B test
+        run: mvn -B verify
         working-directory: autoatendimento
 
       - name: Build backend
@@ -115,8 +119,12 @@ jobs:
         run: pnpm install --frozen-lockfile
         working-directory: self-checkout
 
-      - name: Compile backend for SonarCloud
-        run: mvn -B -DskipTests compile
+      - name: Generate frontend coverage for SonarCloud
+        run: pnpm test:coverage
+        working-directory: self-checkout
+
+      - name: Generate backend coverage for SonarCloud
+        run: mvn -B verify
         working-directory: autoatendimento
 
       - name: SonarCloud Scan
