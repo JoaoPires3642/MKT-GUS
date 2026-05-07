@@ -7,12 +7,16 @@ import com.mktgus.autoatendimento.infra.data.persistence.repository.OrderItemRep
 import com.mktgus.autoatendimento.infra.data.persistence.repository.OrderRepository;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
+
 @Component
 public class JpaOrderGateway implements OrderGateway {
+
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
 
-    public JpaOrderGateway(OrderRepository orderRepository, OrderItemRepository orderItemRepository) {
+    public JpaOrderGateway(OrderRepository orderRepository,
+                           OrderItemRepository orderItemRepository) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
     }
@@ -20,7 +24,18 @@ public class JpaOrderGateway implements OrderGateway {
     @Override
     public Order save(Order order) {
         var savedOrder = orderRepository.save(OrderEntityMapper.toEntity(order));
-        var savedItems = orderItemRepository.saveAll(OrderEntityMapper.toItemEntities(order, savedOrder));
+        var savedItems = orderItemRepository.saveAll(
+                OrderEntityMapper.toItemEntities(order, savedOrder)
+        );
         return OrderEntityMapper.toDomain(savedOrder, savedItems);
+    }
+
+    @Override
+    public Optional<Order> findById(Long id) {
+        return orderRepository.findById(id)
+                .map(orderEntity -> {
+                    var items = orderItemRepository.findByPedidoId(orderEntity.getId());
+                    return OrderEntityMapper.toDomain(orderEntity, items);
+                });
     }
 }

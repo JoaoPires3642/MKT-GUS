@@ -5,17 +5,9 @@ import com.mktgus.autoatendimento.application.purchase.ConfirmPurchaseOutput;
 import com.mktgus.autoatendimento.application.purchase.PriceOverrideReason;
 import com.mktgus.autoatendimento.application.exception.NotFoundException;
 import com.mktgus.autoatendimento.application.exception.ValidationException;
-import com.mktgus.autoatendimento.application.gateway.ClientGateway;
-import com.mktgus.autoatendimento.application.gateway.CouponGateway;
-import com.mktgus.autoatendimento.application.gateway.EmployeeGateway;
-import com.mktgus.autoatendimento.application.gateway.OrderGateway;
-import com.mktgus.autoatendimento.application.gateway.PriceOverrideAuditGateway;
-import com.mktgus.autoatendimento.domain.model.Coupon;
-import com.mktgus.autoatendimento.domain.model.Customer;
-import com.mktgus.autoatendimento.domain.model.Order;
-import com.mktgus.autoatendimento.domain.model.OrderItem;
-import com.mktgus.autoatendimento.domain.model.PriceOverrideAudit;
-import com.mktgus.autoatendimento.domain.model.Product;
+import com.mktgus.autoatendimento.application.gateway.*;
+import com.mktgus.autoatendimento.application.tax.TaxConfig;
+import com.mktgus.autoatendimento.domain.model.*;
 import com.mktgus.autoatendimento.application.points.PontosConfig;
 import com.mktgus.autoatendimento.application.mercado.MercadoConfig;
 import org.springframework.stereotype.Service;
@@ -27,6 +19,7 @@ import java.util.Objects;
 
 @Service
 public class ConfirmPurchaseUseCase {
+
     private final OrderGateway orderGateway;
     private final ClientGateway clientGateway;
     private final CouponGateway couponGateway;
@@ -35,6 +28,8 @@ public class ConfirmPurchaseUseCase {
     private final FindProductByBarcodeUseCase findProductByBarcodeUseCase;
     private final PontosConfig pontosConfig;
     private final MercadoConfig mercadoConfig;
+    private final IssueTaxDocumentUseCase issueTaxDocumentUseCase;
+    private final TaxConfig taxConfig;
 
     public ConfirmPurchaseUseCase(
             OrderGateway orderGateway,
@@ -44,7 +39,9 @@ public class ConfirmPurchaseUseCase {
             PriceOverrideAuditGateway priceOverrideAuditGateway,
             FindProductByBarcodeUseCase findProductByBarcodeUseCase,
             PontosConfig pontosConfig,
-            MercadoConfig mercadoConfig
+            MercadoConfig mercadoConfig,
+            IssueTaxDocumentUseCase issueTaxDocumentUseCase,
+            TaxConfig taxConfig
     ) {
         this.orderGateway = orderGateway;
         this.clientGateway = clientGateway;
@@ -54,16 +51,24 @@ public class ConfirmPurchaseUseCase {
         this.findProductByBarcodeUseCase = findProductByBarcodeUseCase;
         this.pontosConfig = pontosConfig;
         this.mercadoConfig = mercadoConfig;
+        this.issueTaxDocumentUseCase = issueTaxDocumentUseCase;
+        this.taxConfig = taxConfig;
     }
 
     @Transactional
     public ConfirmPurchaseOutput execute(ConfirmPurchaseInput input) {
+
         Customer client = resolveClient(input.customerCpf());
+
         PurchaseDraft draft = buildItems(input);
         List<OrderItem> items = draft.items();
+
         validateItems(items);
+
         double subtotal = items.stream().mapToDouble(OrderItem::totalPrice).sum();
+
         Coupon coupon = resolveCoupon(input, subtotal);
+
         int updatedPointsBalance = updateCustomerPoints(client, subtotal, coupon);
 
         Order order = new Order(
@@ -77,11 +82,22 @@ public class ConfirmPurchaseUseCase {
         );
 
         Order savedOrder = orderGateway.save(order);
+
         savePriceOverrideAudits(savedOrder, draft.priceOverrideAudits());
+
         if (client != null) {
             clientGateway.save(client.withPoints(updatedPointsBalance));
         }
-        return new ConfirmPurchaseOutput(savedOrder, client == null ? null : updatedPointsBalance);
+
+        // 🚀 Emissão fiscal (padronizado)
+        TaxDocument taxDocument = issueTaxDocumentUseCase
+                .execute(savedOrder, taxConfig.getType());
+
+        return new ConfirmPurchaseOutput(
+                savedOrder,
+                client == null ? null : updatedPointsBalance,
+                taxDocument
+        );
     }
 
     private Customer resolveClient(String rawCpf) {
@@ -107,10 +123,13 @@ public class ConfirmPurchaseUseCase {
     private PurchaseDraft buildItems(ConfirmPurchaseInput input) {
         List<ItemDraft> itemDrafts = input.items().stream().map(itemRequest -> {
             validateQuantity(itemRequest);
+
             Product product = findProductByBarcodeUseCase.execute(
                     new com.mktgus.autoatendimento.application.product.FindProductByBarcodeInput(itemRequest.ean())
             );
+
             PriceOverrideAudit pendingAudit = validatePriceAndBuildAudit(product, itemRequest);
+
             return new ItemDraft(createItem(itemRequest, product), pendingAudit);
         }).toList();
 
@@ -135,11 +154,13 @@ public class ConfirmPurchaseUseCase {
         }
 
         ConfirmPurchaseInput.PriceOverride priceOverride = itemRequest.priceOverride();
+
         if (priceOverride == null) {
             throw new ValidationException("Preco divergente exige autorizacao para o item com EAN: " + itemRequest.ean());
         }
 
         Long employeeRegistration = parseEmployeeRegistration(priceOverride.employeeRegistration());
+
         if (!employeeGateway.existsByRegistration(employeeRegistration)) {
             throw new ValidationException("Funcionario nao encontrado para autorizar ajuste de preco.");
         }
@@ -198,6 +219,7 @@ public class ConfirmPurchaseUseCase {
                 .orElseThrow(() -> new NotFoundException("Cupom nao encontrado com ID: " + input.coupon().id()));
 
         boolean requestIsPercentage = "percentage".equalsIgnoreCase(input.coupon().discountType());
+
         if (requestIsPercentage != coupon.percentageDiscount()) {
             throw new ValidationException("Tipo de desconto inconsistente para o cupom ID: " + input.coupon().id());
         }
@@ -258,20 +280,22 @@ public class ConfirmPurchaseUseCase {
             return;
         }
 
-        priceOverrideAuditGateway.saveAll(pendingAudits.stream()
-                .map(audit -> new PriceOverrideAudit(
-                        audit.id(),
-                        savedOrder.id(),
-                        audit.ean(),
-                        audit.productName(),
-                        audit.originalUnitPrice(),
-                        audit.authorizedUnitPrice(),
-                        audit.quantity(),
-                        audit.employeeRegistration(),
-                        audit.reason(),
-                        audit.authorizedAt()
-                ))
-                .toList());
+        priceOverrideAuditGateway.saveAll(
+                pendingAudits.stream()
+                        .map(audit -> new PriceOverrideAudit(
+                                audit.id(),
+                                savedOrder.id(),
+                                audit.ean(),
+                                audit.productName(),
+                                audit.originalUnitPrice(),
+                                audit.authorizedUnitPrice(),
+                                audit.quantity(),
+                                audit.employeeRegistration(),
+                                audit.reason(),
+                                audit.authorizedAt()
+                        ))
+                        .toList()
+        );
     }
 
     private int updateCustomerPoints(Customer client, double subtotal, Coupon coupon) {
@@ -293,10 +317,10 @@ public class ConfirmPurchaseUseCase {
     }
 
     private int calculateEarnedPoints(double subtotal) {
-        double valorPorPonto = pontosConfig.getValorPorPonto();
-        int pontosPorBloco = pontosConfig.getPontosPorBloco();
-        int blocos = (int) (subtotal / valorPorPonto);
-        return blocos * pontosPorBloco;
+        double valuePerPoint = pontosConfig.getValorPorPonto();
+        int pointsPerBlock = pontosConfig.getPontosPorBloco();
+        int blocks = (int) (subtotal / valuePerPoint);
+        return blocks * pointsPerBlock;
     }
 
     private record PurchaseDraft(List<OrderItem> items, List<PriceOverrideAudit> priceOverrideAudits) {

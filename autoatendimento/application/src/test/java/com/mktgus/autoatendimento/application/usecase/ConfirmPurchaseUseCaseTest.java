@@ -11,14 +11,18 @@ import com.mktgus.autoatendimento.application.gateway.PriceOverrideAuditGateway;
 import com.mktgus.autoatendimento.application.gateway.ProductCatalogGateway;
 import com.mktgus.autoatendimento.application.points.PontosConfig;
 import com.mktgus.autoatendimento.application.mercado.MercadoConfig;
+import com.mktgus.autoatendimento.application.tax.TaxConfig;
 import com.mktgus.autoatendimento.domain.model.Coupon;
 import com.mktgus.autoatendimento.domain.model.Customer;
 import com.mktgus.autoatendimento.domain.model.Order;
 import com.mktgus.autoatendimento.domain.model.PriceOverrideAudit;
 import com.mktgus.autoatendimento.domain.model.Product;
+import com.mktgus.autoatendimento.domain.model.TaxDocument;
+import com.mktgus.autoatendimento.domain.model.TaxDocumentType;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +32,38 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class ConfirmPurchaseUseCaseTest {
+
+    // ----------------------------------------------------------------
+    // helpers para não repetir os dois parâmetros novos em cada teste
+    // ----------------------------------------------------------------
+    private static ConfirmPurchaseUseCase buildUseCase(
+            OrderGateway orderGateway,
+            ClientGateway clientGateway,
+            CouponGateway couponGateway,
+            EmployeeGateway employeeGateway,
+            PriceOverrideAuditGateway auditGateway,
+            FindProductByBarcodeUseCase findProduct,
+            PontosConfig pontosConfig,
+            MercadoConfig mercadoConfig
+    ) {
+        return new ConfirmPurchaseUseCase(
+                orderGateway,
+                clientGateway,
+                couponGateway,
+                employeeGateway,
+                auditGateway,
+                findProduct,
+                pontosConfig,
+                mercadoConfig,
+                new NoOpIssueTaxDocumentUseCase(),
+                new TaxConfig()
+        );
+    }
+
+    // ----------------------------------------------------------------
+    // testes
+    // ----------------------------------------------------------------
+
     @Test
     void shouldApplyCouponRulesAndPersistUpdatedPoints() {
         InMemoryClientGateway clientGateway = new InMemoryClientGateway();
@@ -40,21 +76,16 @@ class ConfirmPurchaseUseCaseTest {
         FindProductByBarcodeUseCase findProductByBarcodeUseCase = new FindProductByBarcodeUseCase(new InMemoryProductCatalogGateway());
 
         PontosConfig pontosConfig = new PontosConfig();
-        pontosConfig.setValorPorPonto(6.0);  // subtotal 120 / 6 = 20 blocos
-        pontosConfig.setPontosPorBloco(1);   // 20 blocos * 1 = 20 pontos ganhos
+        pontosConfig.setValorPorPonto(6.0);
+        pontosConfig.setPontosPorBloco(1);
 
         MercadoConfig mercadoConfig = new MercadoConfig();
         mercadoConfig.setId(1L);
 
-        ConfirmPurchaseUseCase useCase = new ConfirmPurchaseUseCase(
-                orderGateway,
-                clientGateway,
-                couponGateway,
-                new InMemoryEmployeeGateway(),
-                new InMemoryPriceOverrideAuditGateway(),
-                findProductByBarcodeUseCase,
-                pontosConfig,
-                mercadoConfig
+        ConfirmPurchaseUseCase useCase = buildUseCase(
+                orderGateway, clientGateway, couponGateway,
+                new InMemoryEmployeeGateway(), new InMemoryPriceOverrideAuditGateway(),
+                findProductByBarcodeUseCase, pontosConfig, mercadoConfig
         );
 
         ConfirmPurchaseOutput output = useCase.execute(new ConfirmPurchaseInput(
@@ -77,20 +108,14 @@ class ConfirmPurchaseUseCaseTest {
         InMemoryCouponGateway couponGateway = new InMemoryCouponGateway();
         couponGateway.coupons.put(1L, new Coupon(1L, "Cupom", "", 10, false, 20, null, null, null));
 
-        PontosConfig pontosConfig = new PontosConfig();
-
         MercadoConfig mercadoConfig = new MercadoConfig();
         mercadoConfig.setId(1L);
 
-        ConfirmPurchaseUseCase useCase = new ConfirmPurchaseUseCase(
-                new InMemoryOrderGateway(),
-                clientGateway,
-                couponGateway,
-                new InMemoryEmployeeGateway(),
-                new InMemoryPriceOverrideAuditGateway(),
+        ConfirmPurchaseUseCase useCase = buildUseCase(
+                new InMemoryOrderGateway(), clientGateway, couponGateway,
+                new InMemoryEmployeeGateway(), new InMemoryPriceOverrideAuditGateway(),
                 new FindProductByBarcodeUseCase(new InMemoryProductCatalogGateway()),
-                pontosConfig,
-                mercadoConfig
+                new PontosConfig(), mercadoConfig
         );
 
         assertThrows(ValidationException.class, () -> useCase.execute(new ConfirmPurchaseInput(
@@ -108,20 +133,14 @@ class ConfirmPurchaseUseCaseTest {
         InMemoryCouponGateway couponGateway = new InMemoryCouponGateway();
         couponGateway.coupons.put(1L, new Coupon(1L, "Cupom", "", 10, true, 20, null, 200.0, null));
 
-        PontosConfig pontosConfig = new PontosConfig();
-
         MercadoConfig mercadoConfig = new MercadoConfig();
         mercadoConfig.setId(1L);
 
-        ConfirmPurchaseUseCase useCase = new ConfirmPurchaseUseCase(
-                new InMemoryOrderGateway(),
-                clientGateway,
-                couponGateway,
-                new InMemoryEmployeeGateway(),
-                new InMemoryPriceOverrideAuditGateway(),
+        ConfirmPurchaseUseCase useCase = buildUseCase(
+                new InMemoryOrderGateway(), clientGateway, couponGateway,
+                new InMemoryEmployeeGateway(), new InMemoryPriceOverrideAuditGateway(),
                 new FindProductByBarcodeUseCase(new InMemoryProductCatalogGateway()),
-                pontosConfig,
-                mercadoConfig
+                new PontosConfig(), mercadoConfig
         );
 
         assertThrows(ValidationException.class, () -> useCase.execute(new ConfirmPurchaseInput(
@@ -135,20 +154,14 @@ class ConfirmPurchaseUseCaseTest {
     void shouldAllowAuthorizedPriceOverrideAndPersistAudit() {
         InMemoryPriceOverrideAuditGateway auditGateway = new InMemoryPriceOverrideAuditGateway();
 
-        PontosConfig pontosConfig = new PontosConfig();
-
         MercadoConfig mercadoConfig = new MercadoConfig();
         mercadoConfig.setId(1L);
 
-        ConfirmPurchaseUseCase useCase = new ConfirmPurchaseUseCase(
-                new InMemoryOrderGateway(),
-                new InMemoryClientGateway(),
-                new InMemoryCouponGateway(),
-                new InMemoryEmployeeGateway(),
-                auditGateway,
+        ConfirmPurchaseUseCase useCase = buildUseCase(
+                new InMemoryOrderGateway(), new InMemoryClientGateway(), new InMemoryCouponGateway(),
+                new InMemoryEmployeeGateway(), auditGateway,
                 new FindProductByBarcodeUseCase(new InMemoryProductCatalogGateway()),
-                pontosConfig,
-                mercadoConfig
+                new PontosConfig(), mercadoConfig
         );
 
         ConfirmPurchaseOutput output = useCase.execute(new ConfirmPurchaseInput(
@@ -173,15 +186,11 @@ class ConfirmPurchaseUseCaseTest {
         MercadoConfig mercadoConfig = new MercadoConfig();
         mercadoConfig.setId(1L);
 
-        ConfirmPurchaseUseCase useCase = new ConfirmPurchaseUseCase(
-                new InMemoryOrderGateway(),
-                new InMemoryClientGateway(),
-                new InMemoryCouponGateway(),
-                new InMemoryEmployeeGateway(),
-                new InMemoryPriceOverrideAuditGateway(),
+        ConfirmPurchaseUseCase useCase = buildUseCase(
+                new InMemoryOrderGateway(), new InMemoryClientGateway(), new InMemoryCouponGateway(),
+                new InMemoryEmployeeGateway(), new InMemoryPriceOverrideAuditGateway(),
                 new FindProductByBarcodeUseCase(new InMemoryProductCatalogGateway()),
-                new PontosConfig(),
-                mercadoConfig
+                new PontosConfig(), mercadoConfig
         );
 
         assertThrows(ValidationException.class, () -> useCase.execute(new ConfirmPurchaseInput(
@@ -207,15 +216,11 @@ class ConfirmPurchaseUseCaseTest {
         MercadoConfig mercadoConfig = new MercadoConfig();
         mercadoConfig.setId(1L);
 
-        ConfirmPurchaseUseCase useCase = new ConfirmPurchaseUseCase(
-                new InMemoryOrderGateway(),
-                clientGateway,
-                couponGateway,
-                new InMemoryEmployeeGateway(),
-                new InMemoryPriceOverrideAuditGateway(),
+        ConfirmPurchaseUseCase useCase = buildUseCase(
+                new InMemoryOrderGateway(), clientGateway, couponGateway,
+                new InMemoryEmployeeGateway(), new InMemoryPriceOverrideAuditGateway(),
                 new FindProductByBarcodeUseCase(new InMemoryProductCatalogGateway()),
-                new PontosConfig(),
-                mercadoConfig
+                new PontosConfig(), mercadoConfig
         );
 
         assertThrows(ValidationException.class, () -> useCase.execute(new ConfirmPurchaseInput(
@@ -225,6 +230,23 @@ class ConfirmPurchaseUseCaseTest {
         )));
     }
 
+    // ----------------------------------------------------------------
+    // stub fiscal — não chama integradora nenhuma
+    // ----------------------------------------------------------------
+    private static final class NoOpIssueTaxDocumentUseCase extends IssueTaxDocumentUseCase {
+        public NoOpIssueTaxDocumentUseCase() {
+            super(null, null);
+        }
+
+        @Override
+        public TaxDocument execute(Order order, TaxDocumentType type) {
+            return TaxDocument.pending(order.id(), type);
+        }
+    }
+
+    // ----------------------------------------------------------------
+    // stubs de infraestrutura
+    // ----------------------------------------------------------------
     private static final class InMemoryClientGateway implements ClientGateway {
         private final Map<Long, Customer> customers = new HashMap<>();
 
@@ -256,10 +278,21 @@ class ConfirmPurchaseUseCaseTest {
 
     private static final class InMemoryOrderGateway implements OrderGateway {
         private long nextId = 1;
+        private final Map<Long, Order> orders = new HashMap<>();
 
         @Override
         public Order save(Order order) {
-            return new Order(nextId++, order.marketId(), order.customerCpf(), order.couponId(), LocalDateTime.now(), order.totalAmount(), order.items());
+            Order saved = new Order(
+                    nextId++, order.marketId(), order.customerCpf(),
+                    order.couponId(), LocalDateTime.now(), order.totalAmount(), order.items()
+            );
+            orders.put(saved.id(), saved);
+            return saved;
+        }
+
+        @Override
+        public Optional<Order> findById(Long id) {
+            return Optional.ofNullable(orders.get(id));
         }
     }
 
@@ -271,7 +304,7 @@ class ConfirmPurchaseUseCaseTest {
     }
 
     private static final class InMemoryPriceOverrideAuditGateway implements PriceOverrideAuditGateway {
-        private final List<PriceOverrideAudit> audits = new java.util.ArrayList<>();
+        private final List<PriceOverrideAudit> audits = new ArrayList<>();
 
         @Override
         public void saveAll(List<PriceOverrideAudit> audits) {
