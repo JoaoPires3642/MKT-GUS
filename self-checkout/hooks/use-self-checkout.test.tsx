@@ -1,7 +1,7 @@
 import { act, renderHook, waitFor } from "@testing-library/react"
 import { useSelfCheckout } from "@/hooks/use-self-checkout"
 import * as api from "@/lib/api"
-import type { ConfirmPurchaseResult, PaymentTransactionResult } from "@/lib/types"
+import type { ConfirmPurchaseResult, Coupon, PaymentTransactionResult } from "@/lib/types"
 
 vi.mock("@/lib/api", () => ({
   confirmPurchase: vi.fn(),
@@ -40,6 +40,15 @@ const confirmPurchaseResult: ConfirmPurchaseResult = {
   items: [],
   updatedPointsBalance: null,
   taxDocument: null,
+}
+
+const coupon: Coupon = {
+  id: "1",
+  name: "Cupom Teste",
+  description: "desc",
+  type: "fixed",
+  value: 10,
+  pointsCost: 2000,
 }
 
 describe("useSelfCheckout payment flow", () => {
@@ -153,5 +162,51 @@ describe("useSelfCheckout payment flow", () => {
     })
 
     expect(result.current.state.paymentError).toBe("Erro ao consultar pagamento")
+  })
+
+  it("blocks coupon application when points are insufficient", async () => {
+    const { result } = renderHook(() => useSelfCheckout())
+
+    act(() => {
+      result.current.actions.handleApplyCoupon(coupon)
+    })
+
+    expect(api.startPayment).not.toHaveBeenCalled()
+    expect(result.current.state.notification).toBe("Saldo de pontos insuficiente para aplicar este cupom.")
+  })
+
+  it("times out when payment remains processing", async () => {
+    vi.useFakeTimers()
+    vi.mocked(api.startPayment).mockResolvedValue(paymentProcessing)
+    vi.mocked(api.fetchPaymentStatus).mockResolvedValue(paymentProcessing)
+
+    const { result } = renderHook(() => useSelfCheckout())
+
+    act(() => {
+      result.current.actions.addProduct({ ean: "999", id: 1, name: "Produto", price: 19.9, quantity: 1 })
+    })
+
+    await act(async () => {
+      const promise = result.current.actions.handlePaymentConfirm("PIX")
+      await vi.runAllTimersAsync()
+      await promise
+    })
+
+    expect(result.current.state.paymentError).toBe("Pagamento ainda em processamento. Tente novamente em instantes.")
+  })
+
+  it("resets payment state when cancel is confirmed", () => {
+    const { result } = renderHook(() => useSelfCheckout())
+
+    act(() => {
+      result.current.actions.addProduct({ ean: "999", id: 1, name: "Produto", price: 19.9, quantity: 1 })
+      result.current.actions.handleApplyCoupon({ ...coupon, pointsCost: 10 })
+      result.current.actions.setShowCancelPopup(true)
+      result.current.actions.handleCancelConfirm(true)
+    })
+
+    expect(result.current.state.cart).toHaveLength(0)
+    expect(result.current.state.appliedCoupon).toBeNull()
+    expect(result.current.state.currentScreen).toBe("welcome")
   })
 })

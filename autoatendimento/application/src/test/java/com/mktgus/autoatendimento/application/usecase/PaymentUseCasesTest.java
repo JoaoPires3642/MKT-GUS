@@ -17,6 +17,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 class PaymentUseCasesTest {
 
@@ -29,6 +30,24 @@ class PaymentUseCasesTest {
 
         assertEquals(PaymentStatus.PROCESSING, output.transaction().status());
         assertEquals("fake-start", output.transaction().providerReference());
+    }
+
+    @Test
+    void shouldRejectStartPaymentWithoutMethod() {
+        InMemoryPaymentTransactionGateway gateway = new InMemoryPaymentTransactionGateway();
+        StartPaymentUseCase useCase = new StartPaymentUseCase(new SuccessfulStartGateway(), gateway);
+
+        assertThrows(com.mktgus.autoatendimento.application.exception.ValidationException.class,
+                () -> useCase.execute(new StartPaymentInput(null, 19.9)));
+    }
+
+    @Test
+    void shouldRejectStartPaymentWithNonPositiveAmount() {
+        InMemoryPaymentTransactionGateway gateway = new InMemoryPaymentTransactionGateway();
+        StartPaymentUseCase useCase = new StartPaymentUseCase(new SuccessfulStartGateway(), gateway);
+
+        assertThrows(com.mktgus.autoatendimento.application.exception.ValidationException.class,
+                () -> useCase.execute(new StartPaymentInput(PaymentMethod.PIX, 0)));
     }
 
     @Test
@@ -83,6 +102,18 @@ class PaymentUseCasesTest {
         ConfirmPaymentUseCase useCase = new ConfirmPaymentUseCase(new CommunicationErrorGateway(), gateway);
 
         assertThrows(IllegalStateException.class, () -> useCase.execute(saved.id()));
+    }
+
+    @Test
+    void shouldConfirmPaymentSuccessfully() {
+        InMemoryPaymentTransactionGateway gateway = new InMemoryPaymentTransactionGateway();
+        PaymentTransaction saved = gateway.save(transaction(PaymentStatus.PROCESSING, null));
+        ConfirmPaymentUseCase useCase = new ConfirmPaymentUseCase(new SuccessfulStartGateway(), gateway);
+
+        var output = useCase.execute(saved.id());
+
+        assertEquals(PaymentStatus.PAID, output.transaction().status());
+        assertNull(output.transaction().failureReason());
     }
 
     @Test
