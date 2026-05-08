@@ -12,7 +12,7 @@ export default function WelcomeScreen({ onStartShopping }: WelcomeScreenProps) {
   return (
     <div className="flex flex-col items-center justify-center w-[600px] space-y-5 text-center">
       <div className="relative -mb-6">
-        <Image src="/images/logo.jpg" alt="Logo" width={500} height={500} priority />
+        <Image src="/images/logo.png" alt="Logo" width={500} height={500} priority />
       </div>
 
       <h1 className="text-4xl font-bold">Bem-vindo ao Auto Atendimento</h1>
