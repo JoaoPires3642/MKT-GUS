@@ -56,6 +56,18 @@ class PaymentUseCasesTest {
     }
 
     @Test
+    void shouldReturnCanceledPaymentStatus() {
+        InMemoryPaymentTransactionGateway gateway = new InMemoryPaymentTransactionGateway();
+        PaymentTransaction saved = gateway.save(transaction(PaymentStatus.PROCESSING, null));
+        GetPaymentStatusUseCase useCase = new GetPaymentStatusUseCase(new CanceledRefreshGateway(), gateway);
+
+        var output = useCase.execute(saved.id());
+
+        assertEquals(PaymentStatus.CANCELED, output.transaction().status());
+        assertEquals("Pagamento cancelado pelo operador.", output.transaction().failureReason());
+    }
+
+    @Test
     void shouldSurfaceCommunicationErrorWhenRefreshingPayment() {
         InMemoryPaymentTransactionGateway gateway = new InMemoryPaymentTransactionGateway();
         PaymentTransaction saved = gateway.save(transaction(PaymentStatus.PROCESSING, null));
@@ -143,6 +155,13 @@ class PaymentUseCasesTest {
         @Override
         public PaymentProviderResult refresh(PaymentTransaction transaction) {
             return new PaymentProviderResult(transaction.provider(), transaction.providerReference(), PaymentStatus.EXPIRED, "Pagamento expirado.", transaction.expiresAt(), null);
+        }
+    }
+
+    private static final class CanceledRefreshGateway extends SuccessfulStartGateway {
+        @Override
+        public PaymentProviderResult refresh(PaymentTransaction transaction) {
+            return new PaymentProviderResult(transaction.provider(), transaction.providerReference(), PaymentStatus.CANCELED, "Pagamento cancelado pelo operador.", transaction.expiresAt(), null);
         }
     }
 

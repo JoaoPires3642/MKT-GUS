@@ -111,6 +111,30 @@ describe("useSelfCheckout payment flow", () => {
     expect(result.current.state.paymentError).toBe("Erro ao iniciar pagamento")
   })
 
+  it("shows canceled payment message", async () => {
+    vi.useFakeTimers()
+    vi.mocked(api.startPayment).mockResolvedValue(paymentProcessing)
+    vi.mocked(api.fetchPaymentStatus).mockResolvedValue({
+      ...paymentProcessing,
+      status: "CANCELED",
+      failureReason: "Pagamento cancelado pelo operador.",
+    })
+
+    const { result } = renderHook(() => useSelfCheckout())
+
+    act(() => {
+      result.current.actions.addProduct({ ean: "999", id: 1, name: "Produto", price: 19.9, quantity: 1 })
+    })
+
+    await act(async () => {
+      const promise = result.current.actions.handlePaymentConfirm("PIX")
+      await vi.runAllTimersAsync()
+      await promise
+    })
+
+    expect(result.current.state.paymentError).toBe("Pagamento cancelado pelo operador.")
+  })
+
   it("shows communication error when polling payment status fails", async () => {
     vi.useFakeTimers()
     vi.mocked(api.startPayment).mockResolvedValue(paymentProcessing)

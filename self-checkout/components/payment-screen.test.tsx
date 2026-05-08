@@ -40,4 +40,20 @@ describe("PaymentScreen", () => {
     expect(screen.getByText("Aguardando confirmacao do pagamento digital...")).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Processando..." })).toBeDisabled()
   })
+
+  it("shows a dedicated canceled payment message", () => {
+    render(
+      <PaymentScreen
+        onConfirm={vi.fn()}
+        onBack={vi.fn()}
+        appliedCoupon={null}
+        totalAmount={19.9}
+        paymentStatus="CANCELED"
+        paymentError={null}
+        isProcessingPayment={false}
+      />,
+    )
+
+    expect(screen.getByText("Pagamento cancelado. Escolha outra forma de pagamento ou tente novamente.")).toBeInTheDocument()
+  })
 })

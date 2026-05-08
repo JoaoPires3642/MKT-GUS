@@ -36,9 +36,10 @@ function getPaymentMessage(paymentStatus: PaymentStatus | null, paymentError: st
     case "AUTHORIZED":
       return "Pagamento confirmado. Finalizando compra..."
     case "FAILED":
-    case "CANCELED":
     case "EXPIRED":
       return "O pagamento nao foi concluido. Tente novamente."
+    case "CANCELED":
+      return "Pagamento cancelado. Escolha outra forma de pagamento ou tente novamente."
     default:
       return null
   }
