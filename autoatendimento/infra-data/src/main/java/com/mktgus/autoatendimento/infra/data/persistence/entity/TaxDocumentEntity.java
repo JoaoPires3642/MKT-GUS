@@ -66,6 +66,7 @@ public class TaxDocumentEntity {
     private LocalDateTime lastAttemptAt;
 
     public TaxDocumentEntity() {
+        // Required by JPA for entity instantiation via reflection.
     }
 
     public Long getId() { return id; }
