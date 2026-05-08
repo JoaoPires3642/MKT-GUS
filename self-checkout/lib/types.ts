@@ -55,3 +55,19 @@ export interface ConfirmPurchaseResult {
   updatedPointsBalance: number | null
   taxDocument: TaxDocumentSummary | null
 }
+
+export type PaymentMethod = "CREDIT" | "DEBIT" | "VALE" | "PIX"
+
+export type PaymentStatus = "PENDING" | "PROCESSING" | "AUTHORIZED" | "PAID" | "FAILED" | "CANCELED" | "EXPIRED"
+
+export interface PaymentTransactionResult {
+  id: number
+  provider: string
+  providerReference: string
+  method: PaymentMethod
+  status: PaymentStatus
+  amount: number
+  failureReason: string | null
+  expiresAt: string | null
+  confirmedAt: string | null
+}

@@ -28,6 +28,7 @@ public class ConfirmPurchaseUseCase {
     private final FindProductByBarcodeUseCase findProductByBarcodeUseCase;
     private final PontosConfig pontosConfig;
     private final MercadoConfig mercadoConfig;
+    private final PaymentTransactionGateway paymentTransactionGateway;
     private final IssueTaxDocumentUseCase issueTaxDocumentUseCase;
     private final TaxConfig taxConfig;
 
@@ -40,6 +41,7 @@ public class ConfirmPurchaseUseCase {
             FindProductByBarcodeUseCase findProductByBarcodeUseCase,
             PontosConfig pontosConfig,
             MercadoConfig mercadoConfig,
+            PaymentTransactionGateway paymentTransactionGateway,
             IssueTaxDocumentUseCase issueTaxDocumentUseCase,
             TaxConfig taxConfig
     ) {
@@ -51,6 +53,7 @@ public class ConfirmPurchaseUseCase {
         this.findProductByBarcodeUseCase = findProductByBarcodeUseCase;
         this.pontosConfig = pontosConfig;
         this.mercadoConfig = mercadoConfig;
+        this.paymentTransactionGateway = paymentTransactionGateway;
         this.issueTaxDocumentUseCase = issueTaxDocumentUseCase;
         this.taxConfig = taxConfig;
     }
@@ -68,6 +71,8 @@ public class ConfirmPurchaseUseCase {
         double subtotal = items.stream().mapToDouble(OrderItem::totalPrice).sum();
 
         Coupon coupon = resolveCoupon(input, subtotal);
+        double totalAmount = applyDiscount(subtotal, coupon);
+        PaymentTransaction paymentTransaction = validatePayment(input.paymentTransactionId(), totalAmount);
 
         int updatedPointsBalance = updateCustomerPoints(client, subtotal, coupon);
 
@@ -77,11 +82,12 @@ public class ConfirmPurchaseUseCase {
                 client == null ? null : client.cpf(),
                 coupon == null ? null : coupon.id(),
                 LocalDateTime.now(),
-                applyDiscount(subtotal, coupon),
+                totalAmount,
                 items
         );
 
         Order savedOrder = orderGateway.save(order);
+        paymentTransactionGateway.save(paymentTransaction.linkToOrder(savedOrder.id(), LocalDateTime.now()));
 
         savePriceOverrideAudits(savedOrder, draft.priceOverrideAudits());
 
@@ -98,6 +104,29 @@ public class ConfirmPurchaseUseCase {
                 client == null ? null : updatedPointsBalance,
                 taxDocument
         );
+    }
+
+    private PaymentTransaction validatePayment(Long paymentTransactionId, double totalAmount) {
+        if (paymentTransactionId == null) {
+            throw new ValidationException("Transacao de pagamento obrigatoria para concluir a compra.");
+        }
+
+        PaymentTransaction transaction = paymentTransactionGateway.findById(paymentTransactionId)
+                .orElseThrow(() -> new ValidationException("Transacao de pagamento nao encontrada."));
+
+        if (!transaction.isConfirmed()) {
+            throw new ValidationException("Pagamento ainda nao foi confirmado.");
+        }
+
+        if (transaction.isConsumed()) {
+            throw new ValidationException("Transacao de pagamento ja foi utilizada em outro pedido.");
+        }
+
+        if (Math.abs(transaction.amount() - totalAmount) > 0.01) {
+            throw new ValidationException("Valor pago difere do total calculado para a compra.");
+        }
+
+        return transaction;
     }
 
     private Customer resolveClient(String rawCpf) {

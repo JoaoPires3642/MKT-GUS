@@ -1,5 +1,5 @@
 import axios from "axios"
-import type { ConfirmPurchaseResult, Coupon, PriceOverride, Product } from "@/lib/types"
+import type { ConfirmPurchaseResult, Coupon, PaymentMethod, PaymentTransactionResult, PriceOverride, Product } from "@/lib/types"
 
 const API_BASE_URL = "http://localhost:8080"
 
@@ -59,10 +59,12 @@ export async function confirmPurchase(params: {
   cart: Product[]
   cpf: string
   hasCpf: boolean
+  paymentTransactionId: number
 }): Promise<ConfirmPurchaseResult> {
-  const { appliedCoupon, cart, cpf, hasCpf } = params
+  const { appliedCoupon, cart, cpf, hasCpf, paymentTransactionId } = params
   const payload = {
     clienteCpf: hasCpf && cpf ? cpf.replace(/\D/g, "") : null,
+    paymentTransactionId,
     itens: cart.map((item) => ({
       ajustePreco: mapPriceOverride(item.priceOverride),
       ean: item.ean,
@@ -90,6 +92,32 @@ export async function confirmPurchase(params: {
   }
 
   return (await response.json()) as ConfirmPurchaseResult
+}
+
+export async function startPayment(params: { amount: number; method: PaymentMethod }) {
+  const response = await fetch(`${API_BASE_URL}/pagamentos/iniciar`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(params),
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => null)
+    throw new Error(errorData?.message ?? "Erro ao iniciar pagamento")
+  }
+
+  return (await response.json()) as PaymentTransactionResult
+}
+
+export async function fetchPaymentStatus(paymentId: number) {
+  const response = await fetch(`${API_BASE_URL}/pagamentos/${paymentId}`)
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => null)
+    throw new Error(errorData?.message ?? "Erro ao consultar pagamento")
+  }
+
+  return (await response.json()) as PaymentTransactionResult
 }
 
 export function mapBackendProduct(data: RawProduct, fallback?: Partial<Product>): Product | null {

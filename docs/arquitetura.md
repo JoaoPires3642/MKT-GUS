@@ -1,133 +1,117 @@
 # Arquitetura do Sistema
 
-## Visão Geral
+## Visao Geral
 
-O MKT-GUS segue o padrão **Clean Architecture** (Arquitetura Limpa), separando claramente as responsabilidades em camadas concêntricas.
+O MKT-GUS e um monorepo com:
 
-```mermaid
-graph TD
-    subgraph Camadas
-        UI["Interface (Controllers)"]
-        APP["Aplicação (Use Cases)"]
-        DOM["Domínio (Models, Gateways)"]
-        INF["Infraestrutura (JPA, APIs Externas)"]
-    end
+- backend Spring Boot modularizado em Maven
+- frontend Next.js para o kiosk de autoatendimento
+- integracoes externas desacopladas por portas e adapters
 
-    UI --> APP
-    APP --> DOM
-    INF --> DOM
-    UI --> INF
+## Modulos Reais Do Backend
 
-    style DOM fill:#e1f5fe
-    style APP fill:#b3e5fc
-    style UI fill:#81d4fa
-    style INF fill:#4fc3f7
+```text
+autoatendimento/
+  domain/        modelos de negocio puros
+  application/   casos de uso, configs e contratos
+  web.ui/        controllers REST e mappers HTTP
+  infra-utils/   utilitarios tecnicos
+  infra-data/    JPA e integracoes externas
+  app/           bootstrap Spring Boot
 ```
 
-## Camadas
+## Regra Central
 
-### 1. Domínio (`domain/`)
+As regras de negocio devem conhecer contratos, nunca implementacoes concretas.
 
-**Responsabilidade:** Regras de negócio puras, sem dependências de frameworks.
+Exemplos atuais:
 
-```
-domain/
-├── model/           # Entidades puras (Product, Order, Customer, etc)
-└── gateway/         # Interfaces para integrações externas
-```
+- catalogo de produtos via `ProductCatalogGateway`
+- emissao fiscal via `TaxEmissionGateway`
+- pagamento digital via `PaymentGateway`
 
-**Características:**
-- Sem anotações Spring (@Service, @Repository, etc)
-- POJOs simples (records ou classes)
-- Depende apenas de outras classes do domínio
+## Fluxos Importantes
 
-### 2. Aplicação (`application/`)
+### Checkout
 
-**Responsabilidade:** Casos de uso e orquestração.
+1. frontend monta carrinho
+2. backend valida itens, cupom e ajustes de preco
+3. pagamento digital e iniciado
+4. frontend consulta status da transacao
+5. compra so e confirmada quando a transacao estiver paga
+6. pedido salvo dispara fluxo fiscal
 
-```
-application/
-├── usecase/         # Lógica de aplicação (ConfirmPurchase, FindProduct, etc)
-├── model/           # DTOs de entrada e saída
-└── exception/       # Exceções de negócio
-```
+### Fiscal
 
-### 3. Interfaces (`interfaces/`)
+- `ConfirmPurchaseUseCase` chama `IssueTaxDocumentUseCase`
+- persistencia do documento fiscal fica separada do pedido
+- provider atual pode ser stub enquanto a integracao real nao existir
 
-**Responsabilidade:** Adaptadores de entrada (REST API, WebSocket).
+### Pagamento
 
-```
-interfaces/
-└── api/
-    ├── controller/  # Endpoints REST
-    ├── request/     # DTOs de request
-    ├── response/    # DTOs de response
-    └── mapper/      # Mapeamento entre API e domínio
-```
+- `PaymentTransaction` representa a transacao
+- `PaymentGateway` abstrai o provedor
+- `PaymentTransactionGateway` persiste o estado
+- provider atual: `FakePaymentGateway`
+- proximo passo natural: adapter real de mercado/maquininha
 
-### 4. Infraestrutura (`infrastructure/`)
+## Metodos de Pagamento Previstos
 
-**Responsabilidade:** Implementações concretas.
+- `CREDIT`
+- `DEBIT`
+- `VALE`
+- `PIX`
 
-```
-infrastructure/
-├── config/          # Configurações Spring
-├── persistence/
-│   ├── entity/      # Entidades JPA (com anotações)
-│   ├── repository/  # Repositories JPA
-│   ├── gateway/     # Implementações de gateways
-│   └── mapper/      # Mapeamento Entity ↔ Domain
-└── external/        # Integrações externas (Mercado Livre)
-```
+## Estados de Pagamento
 
-## Estrutura de Pacotes
+- `PENDING`
+- `PROCESSING`
+- `AUTHORIZED`
+- `PAID`
+- `FAILED`
+- `CANCELED`
+- `EXPIRED`
 
-```
-com.mktgus.autoatendimento/
-├── domain/
-│   ├── model/          # Product, Order, Customer, Coupon, etc
-│   └── gateway/        # ProductCatalogGateway, OrderGateway, etc
-├── application/
-│   ├── usecase/        # ConfirmPurchaseUseCase, FindProductByBarcodeUseCase, etc
-│   ├── model/          # Input/Output records
-│   └── exception/      # NotFoundException, ValidationException
-├── interfaces/
-│   └── api/
-│       ├── controller/ # REST Controllers
-│       ├── request/    # Request DTOs
-│       ├── response/   # Response DTOs
-│       └── mapper/     # API Mappers
-└── infrastructure/
-    ├── config/         # Spring Configs
-    ├── persistence/
-    │   ├── entity/     # JPA Entities
-    │   ├── repository/ # JPA Repositories
-    │   ├── gateway/    # Gateway Impls
-    │   └── mapper/     # Entity Mappers
-    └── external/       # External APIs
-```
+## Fronteiras Da Arquitetura
 
-## Tecnologias
+### `domain`
 
-| Camada | Tecnologia |
-|--------|------------|
-| Backend | Java 21 + Spring Boot 3 |
-| Persistência | Spring Data JPA + MySQL |
-| API Externa | REST (Mercado Livre) |
-| Comunicação | WebSocket (barcode scanner) |
-| Frontend | Next.js + TypeScript |
+- sem Spring
+- sem JPA
+- sem DTO HTTP
 
-## Princípios Aplicados
+### `application`
 
-1. **Dependência Invertida:** Módulos internos não conhecem externos
-2. **Responsabilidade Única:** Cada classe tem uma única razão para mudar
-3. **Interface como Contrato:** Gateways definem contratos sem implementação
-4. **Separação de Concerns:** UI, lógica e dados em camadas distintas
+- casos de uso
+- configuracoes de negocio
+- contratos de integracao
 
-## Regras de Arquitetura
+### `web.ui`
 
-- ❌ Domínio **não pode** conhecer Spring, JPA ou qualquer framework
-- ❌ Use Cases **não podem** ter `@Service` ou `@Transactional`
-- ✅ Entidades JPA ficam **sempre** em `infrastructure.persistence.entity`
-- ✅ Controllers são **finos** - delegam para Use Cases
-- ✅ Mapeamentos explícitos entre camadas
+- controllers REST
+- requests/responses
+- mapeamento API -> use case
+
+### `infra-data`
+
+- entities JPA
+- repositories
+- gateways concretos
+- integracoes Mercado Livre, fiscal fake, payment fake
+
+## Frontend
+
+O `self-checkout` funciona como kiosk e hoje contem:
+
+- leitura de produtos
+- CPF e pontos
+- cupons
+- ajuste de preco autorizado
+- fluxo de pagamento assíncrono
+- tela final de status de impressao fiscal
+
+## Decisoes Atuais
+
+- pedido nao pode ser fechado sem pagamento confirmado
+- emissao fiscal e pagamento sao responsabilidades separadas
+- homologacao e desenvolvimento podem usar adapters fake sem alterar os casos de uso

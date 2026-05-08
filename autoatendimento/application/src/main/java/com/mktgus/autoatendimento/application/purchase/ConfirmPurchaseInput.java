@@ -2,7 +2,7 @@ package com.mktgus.autoatendimento.application.purchase;
 
 import java.util.List;
 
-public record ConfirmPurchaseInput(String customerCpf, List<Item> items, Coupon coupon) {
+public record ConfirmPurchaseInput(String customerCpf, List<Item> items, Coupon coupon, Long paymentTransactionId) {
     public record Item(String ean, int quantity, double unitPrice, PriceOverride priceOverride) {
     }
 

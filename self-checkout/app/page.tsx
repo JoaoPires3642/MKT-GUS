@@ -73,12 +73,16 @@ export default function Home() {
           )}
           {state.currentScreen === "payment" && (
               <PaymentScreen
-                  onConfirm={actions.handlePaymentConfirm}
-                  onBack={() => actions.setCurrentScreen("scanning")}
-                  cpf={state.cpf}
-                  appliedCoupon={state.appliedCoupon}
-              />
-          )}
+                   onConfirm={actions.handlePaymentConfirm}
+                   onBack={() => actions.setCurrentScreen("scanning")}
+                   cpf={state.cpf}
+                   appliedCoupon={state.appliedCoupon}
+                   totalAmount={state.totalAmount}
+                   paymentStatus={state.paymentStatus}
+                   paymentError={state.paymentError}
+                   isProcessingPayment={state.isProcessingPayment}
+               />
+           )}
           {state.currentScreen === "success" && state.completedPurchase && (
               <SuccessScreen order={state.completedPurchase} onNewPurchase={handleNewPurchase} />
           )}

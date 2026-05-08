@@ -1,8 +1,9 @@
-# Database ER Diagram - Modelo Previsto
+# Database ER Diagram - Estado Atual + Direcao
 
-> Modelo alvo de banco para o projeto, mantendo a mudanca recente de `coupon.market_id`.
+> Este documento combina o que ja existe no backend atual com a direcao de modelagem futura.
 >
-> ⚠️ No backend atual, parte desse modelo ainda nao esta implementada integralmente.
+> `tax_document` e `payment_transaction` ja fazem parte do estado implementado.
+> `market` continua como direcao futura de modelagem mais completa.
 
 ```mermaid
 erDiagram
@@ -71,12 +72,43 @@ erDiagram
         datetime authorized_at
     }
 
+    TAX_DOCUMENT {
+        bigint id PK "ID autoincremento"
+        bigint order_id FK "FK -> order(id)"
+        varchar status
+        varchar type
+        varchar document_number
+        varchar access_key
+        text danfe_url
+        text failure_reason
+        int attempts
+        datetime issued_at
+        datetime last_attempt_at
+    }
+
+    PAYMENT_TRANSACTION {
+        bigint id PK "ID autoincremento"
+        varchar provider
+        varchar provider_reference
+        varchar method
+        varchar status
+        decimal amount
+        text failure_reason
+        datetime expires_at
+        datetime confirmed_at
+        datetime created_at
+        datetime updated_at
+        bigint order_id FK "FK -> order(id), opcional"
+    }
+
     MARKET ||--o{ ORDER : "possui"
     MARKET ||--o{ COUPON : "disponibiliza"
     CUSTOMER ||--o{ ORDER : "faz"
     COUPON ||--o{ ORDER : "aplicado_em"
     ORDER ||--o{ ORDER_ITEM : "possui"
     ORDER ||--o{ PRICE_OVERRIDE_AUDIT : "tem_auditado"
+    ORDER ||--o| TAX_DOCUMENT : "gera"
+    ORDER ||--o| PAYMENT_TRANSACTION : "consome_pagamento"
 ```
 
 ## Tabelas e Campos
@@ -152,6 +184,37 @@ erDiagram
 | reason | VARCHAR(255) | Motivo da alteration de preço |
 | authorized_at | DATETIME | NOT NULL |
 
+### tax_document
+| Coluna | Tipo | Restrições |
+|--------|------|-------------|
+| id | BIGINT | PK, AUTO_INCREMENT |
+| order_id | BIGINT | FK -> order(id), NOT NULL |
+| status | VARCHAR(20) | NOT NULL |
+| type | VARCHAR(10) | NOT NULL |
+| document_number | VARCHAR(20) | nullable |
+| access_key | VARCHAR(44) | nullable |
+| danfe_url | TEXT | nullable |
+| failure_reason | TEXT | nullable |
+| attempts | INT | NOT NULL, DEFAULT 0 |
+| issued_at | DATETIME | nullable |
+| last_attempt_at | DATETIME | nullable |
+
+### payment_transaction
+| Coluna | Tipo | Restrições |
+|--------|------|-------------|
+| id | BIGINT | PK, AUTO_INCREMENT |
+| provider | VARCHAR(40) | NOT NULL |
+| provider_reference | VARCHAR(80) | NOT NULL, UNIQUE |
+| method | VARCHAR(20) | NOT NULL |
+| status | VARCHAR(20) | NOT NULL |
+| amount | DECIMAL | NOT NULL |
+| failure_reason | TEXT | nullable |
+| expires_at | DATETIME | nullable |
+| confirmed_at | DATETIME | nullable |
+| created_at | DATETIME | NOT NULL |
+| updated_at | DATETIME | NOT NULL |
+| order_id | BIGINT | FK -> order(id), nullable |
+
 ## Relacionamentos
 
 - **market** 1:N **order** - Cada mercado possui varios pedidos
@@ -160,10 +223,14 @@ erDiagram
 - **coupon** 1:N **order** - Um cupom pode ser usado em varios pedidos; no pedido o vinculo e opcional
 - **order** 1:N **order_item** - Um pedido tem vários itens
 - **order** 1:N **price_override_audit** - Um pedido pode ter várias auditorias de preço
+- **order** 1:1 **tax_document** - Um pedido aprovado pode gerar um documento fiscal
+- **order** 1:1 **payment_transaction** - Um pedido concluido consome uma transacao de pagamento confirmada
 
 ## Status de Implementacao
 
 - `coupon.market_id` ja foi adicionado ao backend
+- `tax_document` ja esta implementada no backend
+- `payment_transaction` ja esta implementada no backend
 - a tabela/entidade `market` ainda precisa ser implementada no backend
 - `order.market_id` e a validacao de cupom por mercado ainda precisam ser implementados
 

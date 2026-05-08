@@ -7,6 +7,8 @@ Ele nao representa integralmente o estado atual implementado no backend.
 
 Estado atual relevante:
 - existe `coupon.market_id` como identificador simples
+- existe `tax_document` para persistencia do fluxo fiscal
+- existe `payment_transaction` para persistencia do fluxo de pagamento digital
 - ainda nao existe tabela `market` no backend atual
 - ainda nao existe `market_id` em `order`
 
@@ -26,12 +28,15 @@ O banco foi simplificado para focar no que o MKT-GUS precisa:
 | order_item | Itens de cada pedido |
 | coupon | Cupons (nosso e do mercado) |
 | price_override_audit | Auditoria de preços alterados |
+| tax_document | Estado e retorno da emissao fiscal |
+| payment_transaction | Estado da cobranca digital |
 
 ## Decisões Pendentes
 
 1. **Cupons do mercado**: De onde vem? (API/integração ou manual?)
 2. **Funcionários**: Como validar? (integração com sistema do mercado?)
 3. **Endereço do market**: Campos estão adequados?
+4. **Provedor real de pagamento**: Qual sera o primeiro adapter plugado?
 
 ## Arquivo com Diagrama
 
