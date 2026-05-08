@@ -1,5 +1,5 @@
 import axios from "axios"
-import type { Coupon, PriceOverride, Product } from "@/lib/types"
+import type { ConfirmPurchaseResult, Coupon, PriceOverride, Product } from "@/lib/types"
 
 const API_BASE_URL = "http://localhost:8080"
 
@@ -16,7 +16,9 @@ type RawProduct = {
   valor?: number
 }
 
-export async function fetchCustomerPoints(cpf: string) {
+type CustomerPointsResponse = number | { pontos?: number }
+
+export async function fetchCustomerPoints(cpf: string): Promise<CustomerPointsResponse> {
   const response = await fetch(`${API_BASE_URL}/pessoa/verificar-cpf`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -27,7 +29,7 @@ export async function fetchCustomerPoints(cpf: string) {
     throw new Error("Erro ao verificar CPF")
   }
 
-  return response.json()
+  return (await response.json()) as CustomerPointsResponse
 }
 
 export async function verifyEmployeeRegistration(registration: string) {
@@ -57,7 +59,7 @@ export async function confirmPurchase(params: {
   cart: Product[]
   cpf: string
   hasCpf: boolean
-}) {
+}): Promise<ConfirmPurchaseResult> {
   const { appliedCoupon, cart, cpf, hasCpf } = params
   const payload = {
     clienteCpf: hasCpf && cpf ? cpf.replace(/\D/g, "") : null,
@@ -87,7 +89,7 @@ export async function confirmPurchase(params: {
     throw new Error(errorData?.message ?? "Erro ao confirmar o pedido")
   }
 
-  return response.json()
+  return (await response.json()) as ConfirmPurchaseResult
 }
 
 export function mapBackendProduct(data: RawProduct, fallback?: Partial<Product>): Product | null {

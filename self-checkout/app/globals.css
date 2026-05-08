@@ -92,3 +92,27 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+
+  body {
+    background: #fff;
+  }
+
+  .print-screen {
+    display: block;
+    width: 100%;
+    max-width: none;
+    padding: 0;
+  }
+
+  .print-document {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+  }
+}
