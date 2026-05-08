@@ -1,27 +1,26 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import Image from "next/image"
+import type { ConfirmPurchaseResult } from "@/lib/types"
 
 interface SuccessScreenProps {
+  order: ConfirmPurchaseResult
   onNewPurchase: () => void
 }
 
-export default function SuccessScreen({ onNewPurchase }: SuccessScreenProps) {
+export default function SuccessScreen({ order, onNewPurchase }: SuccessScreenProps) {
+  const isIssued = order.taxDocument?.status === "ISSUED"
+
   return (
-    <div className="flex flex-col items-center justify-center w-[600px] space-y-5 text-center">
-      <div className="relative -mb-6">
-        <Image src="/images/logo.jpg" alt="Logo" width={500} height={500} priority />
+    <div className="flex w-full max-w-[760px] flex-col items-center justify-center gap-6 rounded-3xl border bg-card p-10 text-center shadow-sm">
+      <div className="space-y-3">
+        <h1 className="text-4xl font-bold">Compra Finalizada</h1>
+        <p className="text-xl text-muted-foreground">
+          {isIssued ? "Imprimindo nota fiscal..." : "Pagamento aprovado. Imprimindo nota fiscal..."}
+        </p>
       </div>
 
-      <h1 className="text-3xl font-bold">Compra Finalizada com Sucesso!</h1>
-
-      <p className="text-gray-600 text-xl">Obrigado Volte Sempre.</p>
-
-      <Button
-        onClick={onNewPurchase}
-        className="px-8 py-4 rounded-md text-lg mt-4"
-      >
+      <Button onClick={onNewPurchase} className="px-8 py-4 text-lg">
         Nova Compra
       </Button>
     </div>

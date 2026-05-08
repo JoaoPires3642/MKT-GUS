@@ -8,13 +8,16 @@ import {
   mapBackendProduct,
   verifyEmployeeRegistration,
 } from "@/lib/api"
-import type { Coupon, PriceOverride, Product } from "@/lib/types"
+import type { ConfirmPurchaseResult, Coupon, PriceOverride, Product } from "@/lib/types"
 
 const POINTS_VALUE_PER_BLOCK = 5
 const POINTS_PER_BLOCK = 10
+const EMPLOYEE_BYPASS_CODE = "12345"
+const PRODUCT_BYPASS_CODE = "9999999999999"
 
 export function useSelfCheckout() {
   const [currentScreen, setCurrentScreen] = useState<"welcome" | "scanning" | "payment" | "success">("welcome")
+  const [completedPurchase, setCompletedPurchase] = useState<ConfirmPurchaseResult | null>(null)
   const [showCpfPopup, setShowCpfPopup] = useState(false)
   const [showCancelPopup, setShowCancelPopup] = useState(false)
   const [showAgeVerificationPopup, setShowAgeVerificationPopup] = useState(false)
@@ -109,6 +112,7 @@ export function useSelfCheckout() {
 
     setCart([])
     setAppliedCoupon(null)
+    setCompletedPurchase(null)
     setCurrentScreen("welcome")
   }
 
@@ -175,6 +179,7 @@ export function useSelfCheckout() {
         setPointsBalance(result.updatedPointsBalance)
       }
 
+      setCompletedPurchase(result)
       setCart([])
       setAppliedCoupon(null)
       setCurrentScreen("success")
@@ -186,9 +191,17 @@ export function useSelfCheckout() {
 
   const handleBarcodeSubmit = async (barcode: string) => {
     setShowBarcodeInputPopup(false)
+    const normalizedBarcode = barcode.trim().toUpperCase()
 
     try {
       if (cart.length > 0) {
+        if (normalizedBarcode === EMPLOYEE_BYPASS_CODE) {
+          setEmployeeRegistration(EMPLOYEE_BYPASS_CODE)
+          setShowEmployeeCartPopup(true)
+          setNotification("Bypass de funcionario ativado. Selecione um item para ajustar.")
+          return
+        }
+
         try {
           const employee = await verifyEmployeeRegistration(barcode)
           if (employee.valid) {
@@ -200,6 +213,20 @@ export function useSelfCheckout() {
         } catch {
           // se nao for matricula valida, segue para a busca do produto
         }
+      }
+
+      if (normalizedBarcode === PRODUCT_BYPASS_CODE) {
+        addProduct({
+          ean: PRODUCT_BYPASS_CODE,
+          id: Date.now(),
+          image: "/placeholder.svg?height=64&width=64",
+          isAdult: false,
+          name: "Produto Homologacao Checkout",
+          price: 19.9,
+          quantity: 1,
+        })
+        setNotification("Produto bypass adicionado ao carrinho.")
+        return
       }
 
       const data = await fetchProductByBarcode(barcode)
@@ -227,6 +254,7 @@ export function useSelfCheckout() {
       handleCpfSubmit,
       handlePaymentConfirm,
       removeProduct,
+      setCompletedPurchase,
       setCurrentScreen,
       setSelectedProductForPriceAdjust,
       setShowAgeVerificationPopup,
@@ -243,6 +271,7 @@ export function useSelfCheckout() {
     state: {
       appliedCoupon,
       cart,
+      completedPurchase,
       cpf,
       currentScreen,
       employeeRegistration,
