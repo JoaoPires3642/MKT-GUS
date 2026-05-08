@@ -276,6 +276,90 @@ class ConfirmPurchaseUseCaseTest {
         )));
     }
 
+    @Test
+    void shouldRejectPurchaseWithoutPaymentTransactionId() {
+        MercadoConfig mercadoConfig = new MercadoConfig();
+        mercadoConfig.setId(1L);
+
+        ConfirmPurchaseUseCase useCase = buildUseCase(
+                new InMemoryOrderGateway(), new InMemoryClientGateway(), new InMemoryCouponGateway(),
+                new InMemoryEmployeeGateway(), new InMemoryPriceOverrideAuditGateway(),
+                new FindProductByBarcodeUseCase(new InMemoryProductCatalogGateway()),
+                new PontosConfig(), mercadoConfig, new InMemoryPaymentTransactionGateway()
+        );
+
+        assertThrows(ValidationException.class, () -> useCase.execute(new ConfirmPurchaseInput(
+                null,
+                List.of(new ConfirmPurchaseInput.Item("789", 1, 60.0, null)),
+                null,
+                null
+        )));
+    }
+
+    @Test
+    void shouldRejectPurchaseWhenPaymentTransactionDoesNotExist() {
+        MercadoConfig mercadoConfig = new MercadoConfig();
+        mercadoConfig.setId(1L);
+
+        ConfirmPurchaseUseCase useCase = buildUseCase(
+                new InMemoryOrderGateway(), new InMemoryClientGateway(), new InMemoryCouponGateway(),
+                new InMemoryEmployeeGateway(), new InMemoryPriceOverrideAuditGateway(),
+                new FindProductByBarcodeUseCase(new InMemoryProductCatalogGateway()),
+                new PontosConfig(), mercadoConfig, new InMemoryPaymentTransactionGateway()
+        );
+
+        assertThrows(ValidationException.class, () -> useCase.execute(new ConfirmPurchaseInput(
+                null,
+                List.of(new ConfirmPurchaseInput.Item("789", 1, 60.0, null)),
+                null,
+                999L
+        )));
+    }
+
+    @Test
+    void shouldRejectPurchaseWhenPaymentTransactionWasAlreadyConsumed() {
+        MercadoConfig mercadoConfig = new MercadoConfig();
+        mercadoConfig.setId(1L);
+        InMemoryPaymentTransactionGateway paymentTransactionGateway = new InMemoryPaymentTransactionGateway();
+        Long paymentId = paymentTransactionGateway.save(consumedPaidTransaction(60.0)).id();
+
+        ConfirmPurchaseUseCase useCase = buildUseCase(
+                new InMemoryOrderGateway(), new InMemoryClientGateway(), new InMemoryCouponGateway(),
+                new InMemoryEmployeeGateway(), new InMemoryPriceOverrideAuditGateway(),
+                new FindProductByBarcodeUseCase(new InMemoryProductCatalogGateway()),
+                new PontosConfig(), mercadoConfig, paymentTransactionGateway
+        );
+
+        assertThrows(ValidationException.class, () -> useCase.execute(new ConfirmPurchaseInput(
+                null,
+                List.of(new ConfirmPurchaseInput.Item("789", 1, 60.0, null)),
+                null,
+                paymentId
+        )));
+    }
+
+    @Test
+    void shouldRejectPurchaseWhenPaidAmountDiffersFromOrderTotal() {
+        MercadoConfig mercadoConfig = new MercadoConfig();
+        mercadoConfig.setId(1L);
+        InMemoryPaymentTransactionGateway paymentTransactionGateway = new InMemoryPaymentTransactionGateway();
+        Long paymentId = paymentTransactionGateway.save(paidTransaction(59.0)).id();
+
+        ConfirmPurchaseUseCase useCase = buildUseCase(
+                new InMemoryOrderGateway(), new InMemoryClientGateway(), new InMemoryCouponGateway(),
+                new InMemoryEmployeeGateway(), new InMemoryPriceOverrideAuditGateway(),
+                new FindProductByBarcodeUseCase(new InMemoryProductCatalogGateway()),
+                new PontosConfig(), mercadoConfig, paymentTransactionGateway
+        );
+
+        assertThrows(ValidationException.class, () -> useCase.execute(new ConfirmPurchaseInput(
+                null,
+                List.of(new ConfirmPurchaseInput.Item("789", 1, 60.0, null)),
+                null,
+                paymentId
+        )));
+    }
+
     // ----------------------------------------------------------------
     // stub fiscal — não chama integradora nenhuma
     // ----------------------------------------------------------------
@@ -373,6 +457,11 @@ class ConfirmPurchaseUseCaseTest {
     private static PaymentTransaction processingTransaction(double amount) {
         LocalDateTime now = LocalDateTime.now();
         return new PaymentTransaction(null, "fake", "fake-ref-processing", PaymentMethod.PIX, PaymentStatus.PROCESSING, amount, null, now.plusMinutes(15), null, now, now, null);
+    }
+
+    private static PaymentTransaction consumedPaidTransaction(double amount) {
+        LocalDateTime now = LocalDateTime.now();
+        return new PaymentTransaction(null, "fake", "fake-ref-consumed", PaymentMethod.PIX, PaymentStatus.PAID, amount, null, now.plusMinutes(15), now, now, now, 99L);
     }
 
     private static final class InMemoryPaymentTransactionGateway implements PaymentTransactionGateway {
