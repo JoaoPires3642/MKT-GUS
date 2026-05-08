@@ -1,5 +1,6 @@
 import { act, renderHook, waitFor } from "@testing-library/react"
 import { useSelfCheckout } from "@/hooks/use-self-checkout"
+import * as api from "@/lib/api"
 import type { ConfirmPurchaseResult, PaymentTransactionResult } from "@/lib/types"
 
 vi.mock("@/lib/api", () => ({
@@ -11,8 +12,6 @@ vi.mock("@/lib/api", () => ({
   startPayment: vi.fn(),
   verifyEmployeeRegistration: vi.fn(),
 }))
-
-const api = await import("@/lib/api")
 
 const paymentProcessing: PaymentTransactionResult = {
   id: 1,
