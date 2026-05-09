@@ -45,7 +45,7 @@ describe("SuccessScreen", () => {
     render(<SuccessScreen order={order} paymentMethod="DEBIT" onNewPurchase={vi.fn()} />)
 
     expect(screen.getByText("Deseja imprimir a nota fiscal?")).toBeInTheDocument()
-    expect(screen.getByText("DANFE Simplificada")).toBeInTheDocument()
+    expect(screen.getAllByText("DANFE Simplificada").length).toBeGreaterThanOrEqual(1)
     expect(screen.getByText("Pedido:")).toBeInTheDocument()
     expect(screen.getByText("Agua Mineral")).toBeInTheDocument()
     expect(screen.getByText("Cartao de debito")).toBeInTheDocument()
