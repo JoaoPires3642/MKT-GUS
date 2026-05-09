@@ -445,7 +445,7 @@ class ConfirmPurchaseUseCaseTest {
     private static final class InMemoryProductCatalogGateway implements ProductCatalogGateway {
         @Override
         public Optional<Product> findByBarcode(String barcode) {
-            return Optional.of(new Product(barcode, "Produto Teste", null, 60.0, false));
+            return Optional.of(new Product(barcode, "Produto Teste", null, 60.0, false, null));
         }
     }
 

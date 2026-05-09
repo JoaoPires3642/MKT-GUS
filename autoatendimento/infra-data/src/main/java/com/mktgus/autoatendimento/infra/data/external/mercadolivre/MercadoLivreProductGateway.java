@@ -32,7 +32,8 @@ public class MercadoLivreProductGateway implements ProductCatalogGateway {
                     "Produto Homologacao Checkout",
                     null,
                     19.90,
-                    false
+                    false,
+                    "Produto utilizado para homologação do fluxo de checkout."
             ));
         }
 
@@ -46,9 +47,10 @@ public class MercadoLivreProductGateway implements ProductCatalogGateway {
             String name = productNode.path("name").asText();
             String categoryId = productNode.path("category_id").asText(null);
             String thumbnail = extractThumbnail(productNode);
+            String description = extractDescription(productNode);
             double price = fetchPrice(productId);
             boolean adultOnly = isAdultProduct(categoryId);
-            return Optional.of(new Product(barcode, name, thumbnail, price, adultOnly));
+            return Optional.of(new Product(barcode, name, thumbnail, price, adultOnly, description));
         } catch (Exception exception) {
             return Optional.empty();
         }
@@ -78,6 +80,14 @@ public class MercadoLivreProductGateway implements ProductCatalogGateway {
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", "Bearer " + accessToken);
         return new HttpEntity<>(headers);
+    }
+
+    private String extractDescription(JsonNode productNode) {
+        String shortDescription = productNode.path("short_description").asText(null);
+        if (shortDescription != null && !shortDescription.isBlank()) {
+            return shortDescription;
+        }
+        return productNode.path("description").asText(null);
     }
 
     private String extractThumbnail(JsonNode productNode) {
