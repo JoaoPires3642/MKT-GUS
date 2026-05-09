@@ -224,7 +224,6 @@ export function useSelfCheckout() {
       }
 
       setCompletedPurchase(result)
-      setPaymentTransaction(null)
       setPaymentStatus(null)
       setCart([])
       setAppliedCoupon(null)
