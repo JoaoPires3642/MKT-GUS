@@ -52,8 +52,8 @@ class ProductControllerTest {
 
     @Test
     void shouldFindProductByBarcodeUsingGetRoute() throws Exception {
-        Product product = new Product("9999999999999", "Produto Homologacao Checkout", null, 19.9, false);
-        ProductResponse response = new ProductResponse("9999999999999", "Produto Homologacao Checkout", null, 19.9, false);
+        Product product = new Product("9999999999999", "Produto Homologacao Checkout", null, 19.9, false, null);
+        ProductResponse response = new ProductResponse("9999999999999", "Produto Homologacao Checkout", null, 19.9, false, null);
         when(findProductByBarcodeUseCase.execute(any())).thenReturn(product);
         when(productApiMapper.toResponse(product)).thenReturn(response);
 
@@ -67,8 +67,8 @@ class ProductControllerTest {
 
     @Test
     void shouldFindProductByBarcodeUsingPostRoute() throws Exception {
-        Product product = new Product("9999999999999", "Produto Homologacao Checkout", null, 19.9, false);
-        ProductResponse response = new ProductResponse("9999999999999", "Produto Homologacao Checkout", null, 19.9, false);
+        Product product = new Product("9999999999999", "Produto Homologacao Checkout", null, 19.9, false, null);
+        ProductResponse response = new ProductResponse("9999999999999", "Produto Homologacao Checkout", null, 19.9, false, null);
         when(processBarcodeScanUseCase.execute(any())).thenReturn(product);
         when(productApiMapper.toResponse(product)).thenReturn(response);
 
