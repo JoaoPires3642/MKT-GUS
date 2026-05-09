@@ -13,6 +13,8 @@ public record ProductResponse(
 
         double price,
 
-        boolean adultOnly
+        boolean adultOnly,
+
+        String description
 ) {
 }

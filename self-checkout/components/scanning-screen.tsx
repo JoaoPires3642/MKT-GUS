@@ -30,6 +30,7 @@ interface ProdutoDto {
   urlImagem: string
   valor: number
   produtoMaiorDeIdade: boolean
+  description?: string
 }
 
 interface ErrorMessage {
@@ -74,6 +75,7 @@ export default function ScanningScreen({
               const product: Product = {
                 id: Date.now(),
                 name: produtoDto.nome,
+                description: produtoDto.description,
                 price: produtoDto.valor,
                 quantity: 1,
                 image: produtoDto.urlImagem || "/placeholder.svg?height=64&width=64",
@@ -212,6 +214,9 @@ export default function ScanningScreen({
                         </div>
                         <div>
                           <div className="font-medium text-base">{item.name}</div>
+                          {item.description && (
+                            <div className="text-sm text-gray-500 mt-0.5">{item.description}</div>
+                          )}
                           {item.priceOverride && (
                             <div className="text-sm text-primary">
                               <div>Preco ajustado manualmente</div>

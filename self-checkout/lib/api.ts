@@ -5,6 +5,7 @@ const API_BASE_URL = "http://localhost:8080"
 
 type RawProduct = {
   adultOnly?: boolean
+  description?: string
   ean?: string
   imageUrl?: string
   message?: string
@@ -126,6 +127,7 @@ export function mapBackendProduct(data: RawProduct, fallback?: Partial<Product>)
   }
 
   return {
+    description: data.description ?? fallback?.description,
     ean: data.ean,
     id: Date.now(),
     image: data.imageUrl ?? data.urlImagem ?? fallback?.image,
