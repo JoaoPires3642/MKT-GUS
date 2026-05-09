@@ -66,7 +66,7 @@ class CartControllerTest {
 
         mockMvc.perform(get("/api/carrinho/recuperar").param("cpf", "52998224725"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.cpf").value("52998224725"))
+                .andExpect(jsonPath("$.cpf").value("***.982.247-**"))
                 .andExpect(jsonPath("$.items[0].ean").value("9999999999999"));
     }
 
