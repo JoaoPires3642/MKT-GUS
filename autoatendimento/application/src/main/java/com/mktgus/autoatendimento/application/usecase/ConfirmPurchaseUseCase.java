@@ -137,9 +137,9 @@ public class ConfirmPurchaseUseCase {
         try {
             Long cpf = Long.parseLong(rawCpf.replaceAll("\\D", ""));
             return clientGateway.findByCpf(cpf)
-                    .orElseThrow(() -> new NotFoundException("Cliente nao encontrado com CPF: " + rawCpf));
+                    .orElseThrow(() -> new NotFoundException("Cliente nao encontrado."));
         } catch (NumberFormatException exception) {
-            throw new ValidationException("CPF invalido: " + rawCpf);
+            throw new ValidationException("CPF invalido.");
         }
     }
 
