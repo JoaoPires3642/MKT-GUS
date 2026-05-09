@@ -26,6 +26,7 @@ public interface OrderApiMapper {
     @Mapping(target = "id", source = "order.id")
     @Mapping(target = "updatedPointsBalance", source = "updatedPointsBalance")
     OrderResponse toResponse(ConfirmPurchaseOutput output);
+
     default String maskCpf(Long cpf) {
         if (cpf == null) return null;
         String s = String.format("%011d", cpf);
@@ -33,5 +34,4 @@ public interface OrderApiMapper {
     }
 
     OrderItemResponse toItemResponse(OrderItem item);
-}
-1
+}2
