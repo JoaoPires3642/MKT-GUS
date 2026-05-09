@@ -37,22 +37,37 @@ const order: ConfirmPurchaseResult = {
 }
 
 describe("SuccessScreen", () => {
-  it("shows printing message without displaying the tax document", () => {
-    render(<SuccessScreen order={order} onNewPurchase={vi.fn()} />)
+  afterEach(() => {
+    vi.useRealTimers()
+  })
 
-    expect(screen.getByText("Compra Finalizada")).toBeInTheDocument()
-    expect(screen.getByText("Imprimindo nota fiscal...")).toBeInTheDocument()
-    expect(screen.queryByText("Pedido #123 confirmado com sucesso.")).not.toBeInTheDocument()
-    expect(screen.queryByText("Nota Fiscal")).not.toBeInTheDocument()
-    expect(screen.queryByText("Agua Mineral")).not.toBeInTheDocument()
+  it("shows fiscal print data including payment method", () => {
+    render(<SuccessScreen order={order} paymentMethod="DEBIT" onNewPurchase={vi.fn()} />)
+
+    expect(screen.getByText("Deseja imprimir a nota fiscal?")).toBeInTheDocument()
+    expect(screen.getAllByText("DANFE Simplificada").length).toBeGreaterThanOrEqual(1)
+    expect(screen.getByText("Pedido:")).toBeInTheDocument()
+    expect(screen.getByText("Agua Mineral")).toBeInTheDocument()
+    expect(screen.getByText("Cartao de debito")).toBeInTheDocument()
   })
 
   it("starts a new purchase when requested", () => {
     const onNewPurchase = vi.fn()
 
-    render(<SuccessScreen order={order} onNewPurchase={onNewPurchase} />)
+    render(<SuccessScreen order={order} paymentMethod="PIX" onNewPurchase={onNewPurchase} />)
 
     fireEvent.click(screen.getByRole("button", { name: "Nova Compra" }))
+
+    expect(onNewPurchase).toHaveBeenCalledTimes(1)
+  })
+
+  it("returns automatically after timeout", () => {
+    vi.useFakeTimers()
+    const onNewPurchase = vi.fn()
+
+    render(<SuccessScreen order={order} paymentMethod="PIX" onNewPurchase={onNewPurchase} />)
+
+    vi.advanceTimersByTime(15000)
 
     expect(onNewPurchase).toHaveBeenCalledTimes(1)
   })

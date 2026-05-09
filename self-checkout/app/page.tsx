@@ -39,6 +39,7 @@ export default function Home() {
 
   const handleNewPurchase = () => {
     actions.setCompletedPurchase(null)
+    actions.setNotification(null)
     actions.setCurrentScreen("welcome")
   }
 
@@ -84,7 +85,11 @@ export default function Home() {
                />
            )}
           {state.currentScreen === "success" && state.completedPurchase && (
-              <SuccessScreen order={state.completedPurchase} onNewPurchase={handleNewPurchase} />
+              <SuccessScreen
+                  order={state.completedPurchase}
+                  paymentMethod={state.paymentTransaction?.method ?? null}
+                  onNewPurchase={handleNewPurchase}
+              />
           )}
           {state.showCpfPopup && (
               <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
