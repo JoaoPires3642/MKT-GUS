@@ -3,18 +3,23 @@
 import { useEffect, useMemo, useState } from "react"
 import {
   confirmPurchase,
+  fetchPaymentStatus,
   fetchCustomerPoints,
   fetchProductByBarcode,
   mapBackendProduct,
+  startPayment,
   verifyEmployeeRegistration,
 } from "@/lib/api"
-import type { Coupon, PriceOverride, Product } from "@/lib/types"
+import type { ConfirmPurchaseResult, Coupon, PaymentMethod, PaymentStatus, PaymentTransactionResult, PriceOverride, Product } from "@/lib/types"
 
 const POINTS_VALUE_PER_BLOCK = 5
 const POINTS_PER_BLOCK = 10
+const EMPLOYEE_BYPASS_CODE = "12345"
+const PRODUCT_BYPASS_CODE = "9999999999999"
 
 export function useSelfCheckout() {
   const [currentScreen, setCurrentScreen] = useState<"welcome" | "scanning" | "payment" | "success">("welcome")
+  const [completedPurchase, setCompletedPurchase] = useState<ConfirmPurchaseResult | null>(null)
   const [showCpfPopup, setShowCpfPopup] = useState(false)
   const [showCancelPopup, setShowCancelPopup] = useState(false)
   const [showAgeVerificationPopup, setShowAgeVerificationPopup] = useState(false)
@@ -30,10 +35,34 @@ export function useSelfCheckout() {
   const [hasCpf, setHasCpf] = useState(false)
   const [pointsBalance, setPointsBalance] = useState(1000)
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null)
+  const [paymentTransaction, setPaymentTransaction] = useState<PaymentTransactionResult | null>(null)
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus | null>(null)
+  const [paymentError, setPaymentError] = useState<string | null>(null)
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false)
   const [notification, setNotification] = useState<string | null>(null)
 
   const subtotal = useMemo(() => cart.reduce((sum, item) => sum + item.price * item.quantity, 0), [cart])
   const pointsToEarn = useMemo(() => Math.floor(subtotal / POINTS_VALUE_PER_BLOCK) * POINTS_PER_BLOCK, [subtotal])
+
+  const totalAmount = useMemo(() => {
+    if (!appliedCoupon) {
+      return subtotal
+    }
+
+    if (appliedCoupon.minPurchase && subtotal < appliedCoupon.minPurchase) {
+      return subtotal
+    }
+
+    const discount =
+      appliedCoupon.type === "percentage"
+        ? Math.min(
+            subtotal * (appliedCoupon.value / 100),
+            appliedCoupon.maxDiscount ?? Number.POSITIVE_INFINITY,
+          )
+        : Math.min(appliedCoupon.value, subtotal)
+
+    return subtotal - discount
+  }, [appliedCoupon, subtotal])
 
   useEffect(() => {
     if (!notification) {
@@ -109,6 +138,10 @@ export function useSelfCheckout() {
 
     setCart([])
     setAppliedCoupon(null)
+    setCompletedPurchase(null)
+    setPaymentTransaction(null)
+    setPaymentStatus(null)
+    setPaymentError(null)
     setCurrentScreen("welcome")
   }
 
@@ -162,7 +195,7 @@ export function useSelfCheckout() {
     setNotification(`Preco ajustado manualmente pela matricula ${priceOverride.employeeRegistration}.`)
   }
 
-  const handlePaymentConfirm = async () => {
+  const handlePaymentConfirm = async (method: PaymentMethod) => {
     const pointsDeducted = appliedCoupon?.pointsCost ?? 0
     if (pointsDeducted > pointsBalance) {
       setNotification("Saldo de pontos insuficiente para aplicar este cupom.")
@@ -170,25 +203,73 @@ export function useSelfCheckout() {
     }
 
     try {
-      const result = await confirmPurchase({ appliedCoupon, cart, cpf, hasCpf })
+      setIsProcessingPayment(true)
+      setPaymentError(null)
+
+      const transaction = await startPayment({ amount: totalAmount, method })
+      setPaymentTransaction(transaction)
+      setPaymentStatus(transaction.status)
+
+      const paidTransaction = await waitForConfirmedPayment(transaction.id)
+      const result = await confirmPurchase({
+        appliedCoupon,
+        cart,
+        cpf,
+        hasCpf,
+        paymentTransactionId: paidTransaction.id,
+      })
+
       if (typeof result.updatedPointsBalance === "number") {
         setPointsBalance(result.updatedPointsBalance)
       }
 
+      setCompletedPurchase(result)
+      setPaymentStatus(null)
       setCart([])
       setAppliedCoupon(null)
       setCurrentScreen("success")
     } catch (error) {
       const message = error instanceof Error ? error.message : "Erro ao finalizar a compra. Tente novamente."
+      setPaymentError(message)
       setNotification(message)
+    } finally {
+      setIsProcessingPayment(false)
     }
+  }
+
+  const waitForConfirmedPayment = async (paymentId: number) => {
+    for (let attempt = 0; attempt < 10; attempt += 1) {
+      const statusResult = await fetchPaymentStatus(paymentId)
+      setPaymentTransaction(statusResult)
+      setPaymentStatus(statusResult.status)
+
+      if (statusResult.status === "PAID" || statusResult.status === "AUTHORIZED") {
+        return statusResult
+      }
+
+      if (statusResult.status === "FAILED" || statusResult.status === "CANCELED" || statusResult.status === "EXPIRED") {
+        throw new Error(statusResult.failureReason ?? "Pagamento nao foi aprovado.")
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+    }
+
+    throw new Error("Pagamento ainda em processamento. Tente novamente em instantes.")
   }
 
   const handleBarcodeSubmit = async (barcode: string) => {
     setShowBarcodeInputPopup(false)
+    const normalizedBarcode = barcode.trim().toUpperCase()
 
     try {
       if (cart.length > 0) {
+        if (normalizedBarcode === EMPLOYEE_BYPASS_CODE) {
+          setEmployeeRegistration(EMPLOYEE_BYPASS_CODE)
+          setShowEmployeeCartPopup(true)
+          setNotification("Bypass de funcionario ativado. Selecione um item para ajustar.")
+          return
+        }
+
         try {
           const employee = await verifyEmployeeRegistration(barcode)
           if (employee.valid) {
@@ -200,6 +281,20 @@ export function useSelfCheckout() {
         } catch {
           // se nao for matricula valida, segue para a busca do produto
         }
+      }
+
+      if (normalizedBarcode === PRODUCT_BYPASS_CODE) {
+        addProduct({
+          ean: PRODUCT_BYPASS_CODE,
+          id: Date.now(),
+          image: "/placeholder.svg?height=64&width=64",
+          isAdult: false,
+          name: "Produto Homologacao Checkout",
+          price: 19.9,
+          quantity: 1,
+        })
+        setNotification("Produto bypass adicionado ao carrinho.")
+        return
       }
 
       const data = await fetchProductByBarcode(barcode)
@@ -227,6 +322,7 @@ export function useSelfCheckout() {
       handleCpfSubmit,
       handlePaymentConfirm,
       removeProduct,
+      setCompletedPurchase,
       setCurrentScreen,
       setSelectedProductForPriceAdjust,
       setShowAgeVerificationPopup,
@@ -243,13 +339,18 @@ export function useSelfCheckout() {
     state: {
       appliedCoupon,
       cart,
+      completedPurchase,
       cpf,
       currentScreen,
       employeeRegistration,
       hasCpf,
       notification,
+      isProcessingPayment,
       pointsBalance,
       pointsToEarn,
+      paymentError,
+      paymentStatus,
+      paymentTransaction,
       selectedProductForPriceAdjust,
       showAgeVerificationPopup,
       showBarcodeInputPopup,
@@ -260,6 +361,7 @@ export function useSelfCheckout() {
       showMyPointsPopup,
       showPointsBlockedPopup,
       subtotal,
+      totalAmount,
     },
   }
 }

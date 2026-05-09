@@ -2,224 +2,191 @@
 
 Base URL: `http://localhost:8080`
 
----
+## Principais Rotas
 
-## 📋 Sumário
-
-| # | Método | Endpoint | Descrição |
-|---|--------|---------|-----------|
-| 1 | `GET` | `/produtos/listar` | Listar produtos escaneados |
-| 2 | `GET` | `/produtos/buscar/{barcode}` | Buscar produto por código |
-| 3 | `POST` | `/produtos/buscar` | Buscar produto (POST) |
-| 4 | `POST` | `/pedidos/confirmar-compra` | Confirmar compra |
-| 5 | `GET` | `/api/cupons` | Listar cupons |
-| 6 | `POST` | `/pessoa/verificar-cpf` | Verificar CPF do cliente |
-| 7 | `POST` | `/api/pontos/finalizar-compra` | Atualizar pontos |
-| 8 | `POST` | `/api/funcionarios/verificar-matricula` | Verificar matrícula |
-
----
+| Metodo | Endpoint | Descricao |
+|---|---|---|
+| `POST` | `/produtos/buscar` | Buscar produto por barcode |
+| `GET` | `/produtos/buscar/{barcode}` | Buscar produto por barcode via path |
+| `POST` | `/pessoa/verificar-cpf` | Consultar cliente e saldo de pontos |
+| `GET` | `/api/cupons` | Listar cupons |
+| `POST` | `/api/funcionarios/verificar-matricula` | Validar matricula |
+| `POST` | `/pagamentos/iniciar` | Iniciar transacao digital |
+| `GET` | `/pagamentos/{paymentId}` | Consultar status do pagamento |
+| `POST` | `/pagamentos/{paymentId}/confirmar` | Confirmar pagamento |
+| `POST` | `/pedidos/confirmar-compra` | Fechar compra com pagamento confirmado |
 
 ## Produtos
 
-### Listar Produtos Escaneados
+### `POST /produtos/buscar`
 
-```
-GET /produtos/listar
-```
+Request:
 
-Lista todos os produtos escaneados na sessão atual.
-
-**Response:**
-```json
-[
-  {
-    "ean": "7891234567890",
-    "name": "Produto Exemplo",
-    "price": 12.99,
-    "imageUrl": "https://...",
-    "adultOnly": false
-  }
-]
-```
-
----
-
-### Buscar Produto por Código (GET)
-
-```
-GET /produtos/buscar/{barcode}
-```
-
-**Parâmetros:**
-| Parâmetro | Tipo | Descrição |
-|-----------|------|-----------|
-| barcode | path | Código de barras (EAN/UPC) |
-
-**Response:**
 ```json
 {
-  "ean": "7891234567890",
-  "name": "Produto Exemplo",
-  "price": 12.99,
-  "imageUrl": "https://...",
+  "barcode": "9999999999999"
+}
+```
+
+Response:
+
+```json
+{
+  "ean": "9999999999999",
+  "name": "Produto Homologacao Checkout",
+  "price": 19.9,
+  "imageUrl": null,
   "adultOnly": false
 }
 ```
 
-**Erros:** `404` - Produto não encontrado
+## Cliente
 
----
+### `POST /pessoa/verificar-cpf`
 
-### Buscar Produto por Código (POST)
+Request:
 
-```
-POST /produtos/buscar
-```
-
-**Request:**
-```json
-{ "barcode": "7891234567890" }
-```
-
-**Response:**
 ```json
 {
-  "ean": "7891234567890",
-  "name": "Produto Exemplo",
-  "price": 12.99,
-  "imageUrl": "https://...",
-  "adultOnly": false
+  "cpf": "52998224725"
 }
 ```
 
----
+Response:
 
-## Pedidos
-
-### Confirmar Compra
-
-```
-POST /pedidos/confirmar-compra
+```json
+120
 ```
 
-**Request:**
+## Funcionario
+
+### `POST /api/funcionarios/verificar-matricula`
+
+Request:
+
 ```json
 {
-  "customerCpf": "12345678900",
-  "coupon": { "id": 1, "discountType": "fixed" },
-  "items": [
+  "matricula": "12345"
+}
+```
+
+Response:
+
+```json
+{
+  "valid": true,
+  "message": "Employee found."
+}
+```
+
+## Pagamentos
+
+### `POST /pagamentos/iniciar`
+
+Request:
+
+```json
+{
+  "method": "PIX",
+  "amount": 19.9
+}
+```
+
+Response:
+
+```json
+{
+  "id": 1,
+  "provider": "fake",
+  "providerReference": "fake-123",
+  "method": "PIX",
+  "status": "PROCESSING",
+  "amount": 19.9,
+  "failureReason": null,
+  "expiresAt": "2026-05-08T18:00:00",
+  "confirmedAt": null
+}
+```
+
+### `GET /pagamentos/{paymentId}`
+
+Response esperada durante polling:
+
+```json
+{
+  "id": 1,
+  "provider": "fake",
+  "providerReference": "fake-123",
+  "method": "PIX",
+  "status": "PAID",
+  "amount": 19.9,
+  "failureReason": null,
+  "expiresAt": "2026-05-08T18:00:00",
+  "confirmedAt": "2026-05-08T17:45:10"
+}
+```
+
+### `POST /pagamentos/{paymentId}/confirmar`
+
+Usado para confirmacao explicita quando o provider exigir acao final do backend.
+
+## Pedido
+
+### `POST /pedidos/confirmar-compra`
+
+Request:
+
+```json
+{
+  "clienteCpf": "52998224725",
+  "paymentTransactionId": 1,
+  "cupom": {
+    "id": 1,
+    "tipoDesconto": "percentage"
+  },
+  "itens": [
     {
-      "ean": "7891234567890",
-      "unitPrice": 12.99,
-      "quantity": 2,
-      "priceOverride": {
-        "authorizedUnitPrice": 10.00,
-        "employeeRegistration": "12345",
-        "reason": "Promoção interna"
-      }
+      "ean": "9999999999999",
+      "valorUnitario": 19.9,
+      "quantidade": 1,
+      "ajustePreco": null
     }
   ]
 }
 ```
 
-**Response:**
+Regras importantes:
+
+- a compra falha se `paymentTransactionId` nao existir
+- a compra falha se o pagamento nao estiver confirmado
+- a compra falha se o valor pago for diferente do total calculado
+
+Response:
+
 ```json
 {
-  "orderId": 1,
-  "customerCpf": "12345678900",
-  "totalAmount": 25.98,
-  "pointsEarned": 200,
-  "finalPointsBalance": 1200,
-  "items": [...]
-}
-```
-
----
-
-## Cupons
-
-### Listar Cupons
-
-```
-GET /api/cupons
-```
-
-**Response:**
-```json
-[
-  {
-    "id": 1,
-    "name": "Desconto R$10",
-    "description": "Ganhe R$10 de desconto",
-    "discountValue": 10.0,
-    "percentageDiscount": false,
-    "cost": 20,
-    "marketId": 3,
-    "minimumPurchase": 50.0,
-    "maximumDiscount": null
+  "id": 10,
+  "customerCpf": 52998224725,
+  "couponId": 1,
+  "orderedAt": "2026-05-08T17:45:11",
+  "totalAmount": 17.91,
+  "items": [
+    {
+      "ean": "9999999999999",
+      "productName": "Produto Homologacao Checkout",
+      "unitPrice": 19.9,
+      "quantity": 1,
+      "adultOnly": false,
+      "totalPrice": 19.9
+    }
+  ],
+  "updatedPointsBalance": 140,
+  "taxDocument": {
+    "status": "PENDING",
+    "numeroDocumento": null,
+    "chaveAcesso": null,
+    "urlDanfe": null,
+    "motivoFalha": "Modulo fiscal nao implementado. Reprocessar apos integracao."
   }
-]
-```
-
----
-
-## Clientes
-
-### Verificar CPF
-
-```
-POST /pessoa/verificar-cpf
-```
-
-**Request:** `{ "cpf": "12345678900" }`
-
-**Response:** `123456` (saldo de pontos)
-
----
-
-## Pontos
-
-### Finalizar Compra com Pontos
-
-```
-POST /api/pontos/finalizar-compra
-```
-
-**Request:**
-```json
-{ "cpf": "12345678900", "requiredPoints": 20 }
-```
-
-**Response:** `{ "message": "Compra finalizada com sucesso!" }`
-
----
-
-## Funcionários
-
-### Verificar Matrícula
-
-```
-POST /api/funcionarios/verificar-matricula
-```
-
-**Request:** `{ "registration": "12345" }`
-
-**Response:** `{ "valid": true, "message": "Employee found." }`
-
----
-
-## Códigos de Erro
-
-| Código | Significado |
-|--------|-------------|
-| `400` | Bad Request - Dados inválidos |
-| `404` | Not Found - Recurso não encontrado |
-| `500` | Internal Server Error |
-
-```json
-{
-  "error": "ValidationException",
-  "message": "CPF invalido.",
-  "timestamp": "2024-01-15T10:30:00"
 }
 ```

@@ -1,125 +1,40 @@
-# Documentação do MKT-GUS
+# Documentacao do MKT-GUS
 
-Sistema de autoatendimento (self-checkout) para supermercados.
+## Comece Por Aqui
 
----
+- `../README.md`: visao geral do projeto e execucao
+- `tutorial.md`: onboarding e setup manual
 
-## 📚 Índice
+## Guias Principais
 
-### Comece por aqui
-- [Tutorial de Instalação](tutorial.md) - Como configurar e rodar o projeto
+- `arquitetura.md`: arquitetura atual do sistema
+- `backend-architecture.md`: regras de evolucao da clean architecture no backend
+- `endpoints.md`: contratos HTTP principais do backend
+- `integracao-api.md`: direcao para troca de integracoes externas
 
-### Guias Técnicos
-- [Arquitetura do Sistema](arquitetura.md) - Clean Architecture e estrutura do código
-- [Endpoints da API](endpoints.md) - Todos os endpoints disponíveis
-- [Integração com Sistema do Cliente](integracao-api.md) - Como trocar integrações externas
+## Estado Atual Do Projeto
 
-### Referências
-- [Modelo de Banco de Dados](database-er-diagram.md) - Diagrama ER e tabelas
+Hoje o projeto ja possui:
 
----
+- fluxo de checkout com barcode, CPF, cupom e ajuste de preco
+- emissao fiscal desacoplada por gateway
+- base de pagamento digital plug-and-play com provider fake
+- frontend de kiosk em Next.js integrado ao backend
 
-## 🚀 Começo Rápido
+## Integracoes Desacopladas
+
+- catalogo de produtos: Mercado Livre
+- fiscal: gateway com stub e ponto de extensao para integrador real
+- pagamento: gateway fake pronto para evoluir para provedor real
+
+## Execucao Rapida
 
 ```bash
-# 1. Clone o repositório
-git clone https://github.com/JoaoPires3642/MKT-GUS.git
-
-# 2. Configure o banco
-mysql -u root -p -e "CREATE DATABASE mkt_gus;"
-
-# 3. Rode o backend
-cd autoatendimento && ./mvnw spring-boot:run
-
-# 4. Rode o frontend (outro terminal)
-cd self-checkout && npm install && npm run dev
+docker compose up -d --build
 ```
 
-Acesse: **http://localhost:3000**
+## Proximos Docs Uteis
 
----
-
-## 🏗️ Arquitetura
-
-```
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│   Frontend  │────▶│   Backend   │────▶│    Banco    │
-│  (Next.js)  │     │   (Java)    │     │   (MySQL)   │
-└─────────────┘     └──────┬──────┘     └─────────────┘
-                           │
-                    ┌──────▼──────┐
-                    │  Mercado     │
-                    │  Livre API  │
-                    └─────────────┘
-```
-
-### Camadas
-
-| Camada | Descrição |
-|--------|-----------|
-| **Domain** | Regras de negócio puras |
-| **Application** | Casos de uso |
-| **Interfaces** | Controllers REST |
-| **Infrastructure** | JPA, APIs externas |
-
-[Ver documentação completa →](arquitetura.md)
-
----
-
-## 🔌 Endpoints Principais
-
-| Método | Endpoint | Descrição |
-|--------|---------|-----------|
-| `GET` | `/produtos/buscar/{barcode}` | Buscar produto |
-| `POST` | `/pedidos/confirmar-compra` | Confirmar compra |
-| `GET` | `/api/cupons` | Listar cupons |
-| `POST` | `/pessoa/verificar-cpf` | Verificar cliente |
-| `POST` | `/api/pontos/finalizar-compra` | Atualizar pontos |
-
-[Ver todos os endpoints →](endpoints.md)
-
----
-
-## 🔄 Integrações
-
-O MKT-GUS suporta troca de integrações via configuração:
-
-- **Catálogo de Produtos** - Mercado Livre (atual) ou sistema do cliente
-- **Programa de Pontos** - Nosso sistema ou sistema do cliente
-- **Funcionários** - Cadastro local ou integração
-
-[Ver guia de integração →](integracao-api.md)
-
----
-
-## 📊 Modelo de Dados
-
-Principais tabelas:
-
-- `market` - Cadastro de mercados
-- `customer` - Clientes (CPF + pontos)
-- `order` - Pedidos
-- `order_item` - Itens do pedido
-- `coupon` - Cupons de desconto
-
-Observacao: o diagrama documenta o modelo previsto do sistema; no backend atual, `coupon.market_id` ja existe e o restante da modelagem de `market` ainda precisa ser concluido.
-
-[Ver diagrama ER →](database-er-diagram.md)
-
----
-
-## 👥 Equipe
-
-| Membro | Função |
-|--------|--------|
-| João Vitor Pires | Backend, Integração |
-| Arthur Fiorin | Backend, QA |
-| Gustavo Furtado | Modelagem, Arquitetura |
-| Lucas Amorim | Frontend, Documentação |
-| Lucas Guedes | Frontend, Documentação |
-
----
-
-## 📝 Licença
-
-Projeto acadêmico - 3º Semestre
+- `database-er-diagram.md`
+- `workflow.md`
+- `contribuir.md`

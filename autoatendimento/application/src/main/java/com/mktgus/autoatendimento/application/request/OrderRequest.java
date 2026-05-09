@@ -10,7 +10,9 @@ public record OrderRequest(
         @JsonAlias("itens")
         List<OrderItemRequest> items,
         @JsonAlias("cupom")
-        CouponRequest coupon
+        CouponRequest coupon,
+        @JsonAlias("paymentTransactionId")
+        Long paymentTransactionId
 ) {
     public record OrderItemRequest(
             @JsonAlias("codigoEan")

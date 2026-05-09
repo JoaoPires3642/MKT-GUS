@@ -38,6 +38,8 @@ export default function Home() {
   }
 
   const handleNewPurchase = () => {
+    actions.setCompletedPurchase(null)
+    actions.setNotification(null)
     actions.setCurrentScreen("welcome")
   }
 
@@ -72,13 +74,23 @@ export default function Home() {
           )}
           {state.currentScreen === "payment" && (
               <PaymentScreen
-                  onConfirm={actions.handlePaymentConfirm}
-                  onBack={() => actions.setCurrentScreen("scanning")}
-                  cpf={state.cpf}
-                  appliedCoupon={state.appliedCoupon}
+                   onConfirm={actions.handlePaymentConfirm}
+                   onBack={() => actions.setCurrentScreen("scanning")}
+                   cpf={state.cpf}
+                   appliedCoupon={state.appliedCoupon}
+                   totalAmount={state.totalAmount}
+                   paymentStatus={state.paymentStatus}
+                   paymentError={state.paymentError}
+                   isProcessingPayment={state.isProcessingPayment}
+               />
+           )}
+          {state.currentScreen === "success" && state.completedPurchase && (
+              <SuccessScreen
+                  order={state.completedPurchase}
+                  paymentMethod={state.paymentTransaction?.method ?? null}
+                  onNewPurchase={handleNewPurchase}
               />
           )}
-          {state.currentScreen === "success" && <SuccessScreen onNewPurchase={handleNewPurchase} />}
           {state.showCpfPopup && (
               <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                 <CpfScreen onSubmit={actions.handleCpfSubmit} onCancel={() => actions.setShowCpfPopup(false)} />

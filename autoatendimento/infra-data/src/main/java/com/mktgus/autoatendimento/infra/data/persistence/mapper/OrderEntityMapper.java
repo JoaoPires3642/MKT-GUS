@@ -53,25 +53,25 @@ public final class OrderEntityMapper {
     }
 
     public static Order toDomain(OrderEntity entity, List<OrderItemEntity> itemEntities) {
-        List<OrderItem> items = itemEntities.stream()
-                .map(item -> new OrderItem(
-                        item.getCodigoEan(),
-                        item.getNomeProduto(),
-                        item.getValorProduto(),
-                        item.getQuantidade(),
-                        item.isProdutoMaiorDeIdade(),
-                        item.getValorItemTotal()
-                ))
-                .toList();
+    List<OrderItem> items = itemEntities.stream()
+            .map(item -> new OrderItem(
+                    item.getCodigoEan(),
+                    item.getNomeProduto(),
+                    item.getValorProduto(),
+                    item.getQuantidade(),
+                    item.isProdutoMaiorDeIdade(),
+                    item.getValorItemTotal()
+            ))
+            .toList();
 
-        return new Order(
-                entity.getId(),
-                entity.getMarketId(),
-                entity.getCliente() == null ? null : entity.getCliente().getCpf(),
-                entity.getCupom() == null ? null : entity.getCupom().getId(),
-                entity.getDataHora(),
-                entity.getValorTotal(),
-                items
-        );
-    }
+    return new Order(
+            entity.getId(),
+            entity.getMarketId(),
+            entity.getCliente() == null ? null : entity.getCliente().getCpf(),
+            entity.getCupom() == null ? null : entity.getCupom().getId(),
+            entity.getDataHora(),
+            entity.getValorTotal(),
+            items
+    );
+}
 }

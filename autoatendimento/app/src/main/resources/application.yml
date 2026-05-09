@@ -40,3 +40,8 @@ pontos:
 
 mercado:
   id: ${MERCADO_ID:1}
+
+payment:
+  provider: ${PAYMENT_PROVIDER:fake}
+  fake-approval-delay-ms: ${PAYMENT_FAKE_APPROVAL_DELAY_MS:2000}
+  expiration-minutes: ${PAYMENT_EXPIRATION_MINUTES:15}
