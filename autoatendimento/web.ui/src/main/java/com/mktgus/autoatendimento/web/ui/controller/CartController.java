@@ -61,6 +61,13 @@ public class CartController {
                 .map(i -> new CartResponse.CartItemResponse(
                         i.ean(), i.productName(), i.unitPrice(), i.quantity(), i.adultOnly()))
                 .toList();
-        return new CartResponse(snapshot.cpf(), snapshot.savedAt(), items);
+        return new CartResponse(maskCpf(snapshot.cpf()), snapshot.savedAt(), items);
+    }
+
+    private String maskCpf(String cpf) {
+        if (cpf == null || cpf.length() < 11) return "***";
+        String digits = cpf.replaceAll("\\D", "");
+        if (digits.length() != 11) return "***";
+        return "***." + digits.substring(3,6) + "." + digits.substring(6,9) + "-**";
     }
 }
