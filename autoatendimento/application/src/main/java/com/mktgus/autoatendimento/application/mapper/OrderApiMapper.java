@@ -18,14 +18,13 @@ public interface OrderApiMapper {
 
     ConfirmPurchaseInput.Coupon toInputCoupon(OrderRequest.CouponRequest coupon);
 
-    @Mapping(target = "customerCpf", source = "order.customerCpf")
+    @Mapping(target = "customerCpf", expression = "java(maskCpf(output.order().customerCpf()))")
     @Mapping(target = "couponId", source = "order.couponId")
     @Mapping(target = "orderedAt", source = "order.orderedAt")
     @Mapping(target = "totalAmount", source = "order.totalAmount")
     @Mapping(target = "items", source = "order.items")
     @Mapping(target = "id", source = "order.id")
     @Mapping(target = "updatedPointsBalance", source = "updatedPointsBalance")
-    @Mapping(target = "customerCpf", expression = "java(maskCpf(output.order().customerCpf()))")
     OrderResponse toResponse(ConfirmPurchaseOutput output);
     default String maskCpf(Long cpf) {
         if (cpf == null) return null;
@@ -35,3 +34,4 @@ public interface OrderApiMapper {
 
     OrderItemResponse toItemResponse(OrderItem item);
 }
+1
