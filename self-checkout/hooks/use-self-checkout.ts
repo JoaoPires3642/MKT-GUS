@@ -15,7 +15,6 @@ import type { ConfirmPurchaseResult, Coupon, PaymentMethod, PaymentStatus, Payme
 const POINTS_VALUE_PER_BLOCK = 5
 const POINTS_PER_BLOCK = 10
 const EMPLOYEE_BYPASS_CODE = "12345"
-const PRODUCT_BYPASS_CODE = "9999999999999"
 
 export function useSelfCheckout() {
   const [currentScreen, setCurrentScreen] = useState<"welcome" | "scanning" | "payment" | "success">("welcome")
@@ -281,20 +280,6 @@ export function useSelfCheckout() {
         } catch {
           // se nao for matricula valida, segue para a busca do produto
         }
-      }
-
-      if (normalizedBarcode === PRODUCT_BYPASS_CODE) {
-        addProduct({
-          ean: PRODUCT_BYPASS_CODE,
-          id: Date.now(),
-          image: "/placeholder.svg?height=64&width=64",
-          isAdult: false,
-          name: "Produto Homologacao Checkout",
-          price: 19.9,
-          quantity: 1,
-        })
-        setNotification("Produto bypass adicionado ao carrinho.")
-        return
       }
 
       const data = await fetchProductByBarcode(barcode)

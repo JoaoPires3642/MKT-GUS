@@ -14,6 +14,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.Optional;
 
 @Component
+@Deprecated(forRemoval = false)
 public class MercadoLivreProductGateway implements ProductCatalogGateway {
     private static final String SEARCH_URL = "https://api.mercadolibre.com/products/search";
     private static final String ITEMS_URL = "https://api.mercadolibre.com/products/%s/items";

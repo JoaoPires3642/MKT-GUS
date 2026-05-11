@@ -24,7 +24,7 @@ public class ProcessBarcodeScanUseCase {
             Product product = findProductByBarcodeUseCase.execute(input);
             scannedProductNotifier.publishProduct(product);
             return product;
-        } catch (NotFoundException exception) {
+        } catch (NotFoundException exception) { //Crítica que ocorre no front
             scannedProductNotifier.publishError("Produto nao encontrado para o codigo de barras: " + input.barcode());
             throw exception;
         }
