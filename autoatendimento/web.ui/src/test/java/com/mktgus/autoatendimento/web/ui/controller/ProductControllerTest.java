@@ -5,7 +5,6 @@ import com.mktgus.autoatendimento.application.mapper.ProductApiMapper;
 import com.mktgus.autoatendimento.application.response.ProductResponse;
 import com.mktgus.autoatendimento.application.usecase.FindProductByBarcodeUseCase;
 import com.mktgus.autoatendimento.application.usecase.ListScannedProductsUseCase;
-import com.mktgus.autoatendimento.application.usecase.ProcessBarcodeScanUseCase;
 import com.mktgus.autoatendimento.application.usecase.RegisterScannedProductUseCase;
 import com.mktgus.autoatendimento.domain.model.Product;
 import org.junit.jupiter.api.Test;
@@ -42,9 +41,6 @@ class ProductControllerTest {
     private FindProductByBarcodeUseCase findProductByBarcodeUseCase;
 
     @MockBean
-    private ProcessBarcodeScanUseCase processBarcodeScanUseCase;
-
-    @MockBean
     private ListScannedProductsUseCase listScannedProductsUseCase;
 
     @MockBean
@@ -69,7 +65,7 @@ class ProductControllerTest {
     void shouldFindProductByBarcodeUsingPostRoute() throws Exception {
         Product product = new Product("9999999999999", "Produto Homologacao Checkout", null, 19.9, false, null);
         ProductResponse response = new ProductResponse("9999999999999", "Produto Homologacao Checkout", null, 19.9, false, null);
-        when(processBarcodeScanUseCase.execute(any())).thenReturn(product);
+        when(findProductByBarcodeUseCase.execute(any())).thenReturn(product);
         when(productApiMapper.toResponse(product)).thenReturn(response);
 
         String body = objectMapper.writeValueAsString(new BarcodeRequestFixture("9999999999999"));
