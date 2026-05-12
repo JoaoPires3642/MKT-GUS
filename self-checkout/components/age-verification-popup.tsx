@@ -13,6 +13,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import axios from "axios";
+import NumericKeypadDialog from "@/components/numeric-keypad-dialog";
+import { onlyDigits } from "@/lib/numeric-input";
 
 interface AgeVerificationPopupProps {
   onConfirm: () => void;
@@ -24,6 +26,7 @@ export default function AgeVerificationPopup({ onConfirm, onCancel }: AgeVerific
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showInvalidPopup, setShowInvalidPopup] = useState(false);
+  const [showKeypad, setShowKeypad] = useState(false);
 
   const handleConfirm = async () => {
     if (!employeeId.trim()) {
@@ -66,14 +69,33 @@ export default function AgeVerificationPopup({ onConfirm, onCancel }: AgeVerific
                 confirmar a compra.
               </p>
 
-              <Input
-                  type="text"
-                  placeholder="ID FUNCIONÁRIO"
-                  value={employeeId}
-                  onChange={(e) => setEmployeeId(e.target.value)}
-                  className="py-5 text-base border-2 mt-4"
-                  disabled={isLoading}
-              />
+              <div className="relative overflow-visible">
+                <Input
+                    type="text"
+                    placeholder="ID FUNCIONÁRIO"
+                    value={employeeId}
+                    onClick={() => setShowKeypad(true)}
+                    readOnly
+                    inputMode="none"
+                    className="cursor-pointer py-5 text-base border-2 mt-4"
+                    disabled={isLoading}
+                />
+
+                <NumericKeypadDialog
+                    open={showKeypad}
+                    onOpenChange={setShowKeypad}
+                    value={employeeId}
+                    onValueChange={(value) => {
+                      setEmployeeId(onlyDigits(value))
+                      if (error) {
+                        setError(null)
+                      }
+                    }}
+                    onConfirm={() => setShowKeypad(false)}
+                    confirmLabel="Aplicar"
+                    maxLength={12}
+                />
+              </div>
 
               {error && <p className="text-red-500 text-sm">{error}</p>}
 

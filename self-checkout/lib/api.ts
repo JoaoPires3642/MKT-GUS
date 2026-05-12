@@ -13,7 +13,6 @@ type RawProduct = {
   nome?: string
   price?: number
   produtoMaiorDeIdade?: boolean
-  urlImagem?: string
   valor?: number
 }
 
@@ -130,7 +129,7 @@ export function mapBackendProduct(data: RawProduct, fallback?: Partial<Product>)
     description: data.description ?? fallback?.description,
     ean: data.ean,
     id: Date.now(),
-    image: data.imageUrl ?? data.urlImagem ?? fallback?.image,
+    image: data.imageUrl ?? fallback?.image,
     isAdult: data.adultOnly ?? data.produtoMaiorDeIdade ?? fallback?.isAdult,
     name: data.name ?? data.nome ?? fallback?.name ?? "Produto",
     price: data.price ?? data.valor ?? fallback?.price ?? 0,

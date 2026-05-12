@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { mapBackendProduct } from "@/lib/api"
 import { getPriceOverrideReasonLabel } from "@/lib/price-override-reasons"
 import type { Product, Coupon } from "@/lib/types"
 import { Beer, Award, Scan, Trash2, Barcode } from "lucide-react"
@@ -26,10 +27,13 @@ interface ScanningScreenProps {
 
 interface ProdutoDto {
   ean: string
-  nome: string
-  urlImagem: string
-  valor: number
-  produtoMaiorDeIdade: boolean
+  name?: string
+  nome?: string
+  imageUrl?: string
+  price?: number
+  valor?: number
+  adultOnly?: boolean
+  produtoMaiorDeIdade?: boolean
   description?: string
 }
 
@@ -67,20 +71,18 @@ export default function ScanningScreen({
             setTimeout(() => setNotification(null), 3000)
           } else {
             const produtoDto = data as ProdutoDto
-            const scannedEan = produtoDto.ean
+            const product = mapBackendProduct(produtoDto)
+            if (!product) {
+              setNotification("Produto escaneado sem EAN.")
+              setTimeout(() => setNotification(null), 3000)
+              return
+            }
+
+            const scannedEan = product.ean
             const existingProduct = cart.find((item) => item.ean === scannedEan)
             if (existingProduct) {
               onUpdateQuantity(existingProduct.id, existingProduct.quantity + 1)
             } else {
-              const product: Product = {
-                id: Date.now(),
-                name: produtoDto.nome,
-                description: produtoDto.description,
-                price: produtoDto.valor,
-                quantity: 1,
-                image: produtoDto.urlImagem || "/placeholder.svg?height=64&width=64",
-                ean: scannedEan,
-              }
               onAddProduct(product)
             }
           }

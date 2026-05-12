@@ -1,31 +1,33 @@
 package com.mktgus.autoatendimento.infra.data.device.audio;
 
+import java.awt.Toolkit;
 import javax.sound.sampled.*;
 import java.io.IOException;
 import java.io.InputStream;
 
 public class SoundPlayer {
 
-
-    // Método para emitir som
     public static void beep() {
-        try {
-            Thread.sleep(100);  // Delay de 100ms antes de emitir o som
-
-            // Acessando o arquivo de som dentro da pasta resources (somente com caminho relativo)
-            InputStream soundStream = SoundPlayer.class.getResourceAsStream("/sounds/test.wav");
-
+        try (InputStream soundStream = SoundPlayer.class.getResourceAsStream("/sounds/beep.wav")) {
             if (soundStream == null) {
-                System.err.println("Arquivo de som não encontrado!");
+                System.err.println("Arquivo de som nao encontrado: /sounds/beep.wav");
+                Toolkit.getDefaultToolkit().beep();
                 return;
             }
 
-            AudioInputStream audioStream = AudioSystem.getAudioInputStream(soundStream);
-            Clip clip = AudioSystem.getClip();
-            clip.open(audioStream);
-            clip.start();
-        } catch (UnsupportedAudioFileException | IOException | LineUnavailableException | InterruptedException e) {
+            try (AudioInputStream audioStream = AudioSystem.getAudioInputStream(soundStream)) {
+                Clip clip = AudioSystem.getClip();
+                clip.addLineListener(event -> {
+                    if (event.getType() == LineEvent.Type.STOP) {
+                        clip.close();
+                    }
+                });
+                clip.open(audioStream);
+                clip.start();
+            }
+        } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
             System.err.println("Erro ao reproduzir o som: " + e.getMessage());
+            Toolkit.getDefaultToolkit().beep();
         }
     }
 }

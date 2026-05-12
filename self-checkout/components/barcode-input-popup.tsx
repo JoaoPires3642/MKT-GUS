@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { Barcode } from "lucide-react"
+import NumericKeypadDialog from "@/components/numeric-keypad-dialog"
+import { onlyDigits } from "@/lib/numeric-input"
 
 interface BarcodeInputPopupProps {
   onSubmit: (barcode: string) => void
@@ -15,49 +17,62 @@ interface BarcodeInputPopupProps {
 
 export default function BarcodeInputPopup({ onSubmit, onCancel }: BarcodeInputPopupProps) {
   const [barcode, setBarcode] = useState("")
+  const [showKeypad, setShowKeypad] = useState(false)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (barcode.trim()) {
-      onSubmit(barcode)
+    const normalizedBarcode = onlyDigits(barcode)
+    if (normalizedBarcode.trim()) {
+      onSubmit(normalizedBarcode)
     }
   }
 
   return (
-    <Card className="relative border-2 rounded-lg shadow-sm w-[500px]">
-      <CardContent className="p-8">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-3 text-center">
-            <div className="flex justify-center mb-2">
-              <Barcode className="h-10 w-10 text-primary" />
+    <>
+      <Card className="relative w-[min(92vw,560px)] rounded-2xl border-2 shadow-sm">
+        <CardContent className="p-8">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-3 text-center">
+              <div className="mb-2 flex justify-center">
+                <Barcode className="h-10 w-10 text-primary" />
+              </div>
+              <h2 className="text-2xl font-bold">Inserir Código de Barras</h2>
+              <p className="text-base text-gray-500">Toque no campo para abrir o teclado numérico.</p>
             </div>
-            <h2 className="text-2xl font-bold">Inserir Código de Barras</h2>
-            <p className="text-gray-500 text-base">Digite o código de barras do produto manualmente.</p>
-          </div>
 
-          <Input
-            type="text"
-            placeholder="Digite o código de barras"
-            value={barcode}
-            onChange={(e) => setBarcode(e.target.value)}
-            className="text-center py-6 text-xl border-2"
-            autoFocus
-          />
+            <div className="relative overflow-visible">
+              <Input
+                type="text"
+                placeholder="Digite o código de barras"
+                value={barcode}
+                onClick={() => setShowKeypad(true)}
+                readOnly
+                inputMode="none"
+                className="cursor-pointer py-6 text-center text-xl border-2"
+              />
+
+              <NumericKeypadDialog
+                open={showKeypad}
+                onOpenChange={setShowKeypad}
+                value={barcode}
+                onValueChange={setBarcode}
+                onConfirm={() => setShowKeypad(false)}
+                confirmLabel="Aplicar"
+                maxLength={14}
+              />
+            </div>
 
           <div className="flex justify-center gap-4">
             <Button type="button" variant="destructive" onClick={onCancel} className="px-6 py-3 rounded-md text-base">
               Cancelar
             </Button>
-            <Button
-              type="submit"
-              className="px-6 py-3 rounded-md text-base"
-              disabled={!barcode.trim()}
-            >
-              Adicionar
-            </Button>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+              <Button type="submit" className="px-6 py-3 rounded-md text-base" disabled={!barcode.trim()}>
+                Adicionar
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+    </>
   )
 }
