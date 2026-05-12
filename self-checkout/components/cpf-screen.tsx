@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { X } from "lucide-react"
+import NumericKeypadDialog from "@/components/numeric-keypad-dialog"
+import { formatCpfDigits, onlyDigits } from "@/lib/numeric-input"
 
 interface CpfScreenProps {
   onSubmit: (cpf: string, pontos: number) => void
@@ -13,46 +15,32 @@ interface CpfScreenProps {
 }
 
 export default function CpfScreen({ onSubmit, onCancel }: CpfScreenProps) {
-  const [cpf, setCpf] = useState("")
+  const [cpfDigits, setCpfDigits] = useState("")
   const [error, setError] = useState<string | null>(null)
+  const [showKeypad, setShowKeypad] = useState(false)
 
-  const formatCpf = (value: string) => {
-    const numericValue = value.replace(/\D/g, "")
-    if (numericValue.length <= 3) {
-      return numericValue
-    } else if (numericValue.length <= 6) {
-      return `${numericValue.slice(0, 3)}.${numericValue.slice(3)}`
-    } else if (numericValue.length <= 9) {
-      return `${numericValue.slice(0, 3)}.${numericValue.slice(3, 6)}.${numericValue.slice(6)}`
-    } else {
-      return `${numericValue.slice(0, 3)}.${numericValue.slice(3, 6)}.${numericValue.slice(6, 9)}-${numericValue.slice(9, 11)}`
-    }
-  }
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCpf(formatCpf(e.target.value))
+  const handleChange = (value: string) => {
+    setCpfDigits(onlyDigits(value).slice(0, 11))
     if (error) {
       setError(null)
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const numericCpf = cpf.replace(/\D/g, "")
-    if (numericCpf.length === 11) {
+  const handleConfirm = async () => {
+    if (cpfDigits.length === 11) {
       try {
         const response = await fetch("http://localhost:8080/pessoa/verificar-cpf", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ cpf: numericCpf }),
+          body: JSON.stringify({ cpf: cpfDigits }),
         })
 
         if (response.ok) {
           const data = await response.json()
           const pontos = data.pontos || 0
-          onSubmit(cpf, pontos)
+          onSubmit(cpfDigits, pontos)
         } else {
           const result = await response.json().catch(() => null)
           setError(result?.message ?? "CPF inválido")
@@ -82,43 +70,51 @@ export default function CpfScreen({ onSubmit, onCancel }: CpfScreenProps) {
         )}
 
         <CardContent className="p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-3 text-center">
-              <h2 className="text-2xl font-bold">Digite seu CPF</h2>
-              <p className="text-gray-500 text-base">Por favor, insira seu CPF para compras com desconto.</p>
-            </div>
+          <div className="space-y-6">
+          <div className="space-y-2 text-center">
+            <h2 className="text-2xl font-bold">Digite seu CPF</h2>
+            <p className="text-sm text-gray-500">
+              Informar o CPF acumula pontos para trocar por cupons de desconto.
+            </p>
+          </div>
 
             {error && <p className="text-center text-sm text-red-600">{error}</p>}
 
-            <Input
-                type="text"
-                placeholder="000.000.000-00"
-                value={cpf}
-                onChange={handleChange}
-                maxLength={14}
-                style={{ fontSize: "1.5rem", padding: "1.5rem 0" }}
-                className="text-center border-2 rounded-md w-full"
-            />
+            <div className="relative overflow-visible">
+              <Input
+                  type="text"
+                  placeholder="000.000.000-00"
+                  value={formatCpfDigits(cpfDigits)}
+                  onClick={() => setShowKeypad(true)}
+                  readOnly
+                  inputMode="none"
+                  className="cursor-pointer text-center border-2 rounded-md w-full py-6 text-xl"
+              />
 
-            <div className="flex flex-col gap-3">
-              <Button
-                  type="submit"
-                  className="w-full py-3 text-base rounded-md"
-                  disabled={cpf.replace(/\D/g, "").length !== 11}
-              >
-                Continuar
-              </Button>
+              <NumericKeypadDialog
+                open={showKeypad}
+                onOpenChange={setShowKeypad}
+                value={cpfDigits}
+                onValueChange={handleChange}
+                onLeftAction={handleContinueWithoutCpf}
+                leftActionLabel="Continuar sem CPF"
+                onConfirm={handleConfirm}
+                confirmLabel="Aplicar"
+                maxLength={11}
+              />
+            </div>
 
+            {!showKeypad && (
               <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleContinueWithoutCpf}
-                  className="w-full border-primary text-primary hover:bg-primary/10 py-3 text-base rounded-md"
+                type="button"
+                variant="outline"
+                onClick={handleContinueWithoutCpf}
+                className="w-full border-primary text-primary hover:bg-primary/10 py-3 text-base rounded-md"
               >
                 Continuar sem CPF
               </Button>
-            </div>
-          </form>
+            )}
+          </div>
         </CardContent>
       </Card>
   )

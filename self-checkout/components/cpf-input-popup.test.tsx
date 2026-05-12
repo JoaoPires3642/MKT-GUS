@@ -13,9 +13,10 @@ describe("CpfInputPopup", () => {
 
     render(<CpfInputPopup onSubmit={onSubmit} onCancel={onCancel} />)
 
-    fireEvent.change(screen.getByPlaceholderText("000.000.000-00"), {
-      target: { value: "52998224725" },
-    })
+    fireEvent.click(screen.getByPlaceholderText("000.000.000-00"))
+    for (const digit of "52998224725") {
+      fireEvent.click(screen.getByRole("button", { name: digit }))
+    }
 
     fireEvent.click(screen.getByRole("button", { name: "Confirmar" }))
 
@@ -27,7 +28,7 @@ describe("CpfInputPopup", () => {
         body: JSON.stringify({ cpf: "52998224725" }),
       })
     )
-    await waitFor(() => expect(onSubmit).toHaveBeenCalledWith("529.982.247-25"))
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledWith("52998224725"))
   })
 
   it("does not submit when cpf is incomplete", async () => {
@@ -37,9 +38,11 @@ describe("CpfInputPopup", () => {
 
     render(<CpfInputPopup onSubmit={onSubmit} onCancel={vi.fn()} />)
 
-    fireEvent.change(screen.getByPlaceholderText("000.000.000-00"), {
-      target: { value: "123" },
-    })
+    fireEvent.click(screen.getByPlaceholderText("000.000.000-00"))
+    fireEvent.click(screen.getByRole("button", { name: "1" }))
+    fireEvent.click(screen.getByRole("button", { name: "2" }))
+    fireEvent.click(screen.getByRole("button", { name: "3" }))
+    fireEvent.click(screen.getByRole("button", { name: "Voltar" }))
 
     expect(screen.getByRole("button", { name: "Confirmar" })).toBeDisabled()
     expect(fetchMock).not.toHaveBeenCalled()
@@ -55,9 +58,10 @@ describe("CpfInputPopup", () => {
 
     render(<CpfInputPopup onSubmit={vi.fn()} onCancel={vi.fn()} />)
 
-    fireEvent.change(screen.getByPlaceholderText("000.000.000-00"), {
-      target: { value: "12345678901" },
-    })
+    fireEvent.click(screen.getByPlaceholderText("000.000.000-00"))
+    for (const digit of "12345678901") {
+      fireEvent.click(screen.getByRole("button", { name: digit }))
+    }
 
     fireEvent.click(screen.getByRole("button", { name: "Confirmar" }))
 

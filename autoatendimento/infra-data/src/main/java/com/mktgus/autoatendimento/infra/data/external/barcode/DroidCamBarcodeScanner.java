@@ -38,7 +38,7 @@ public class DroidCamBarcodeScanner {
         this.videoStream = connectToStream();
     }
 
-    @Scheduled(fixedDelay = 100)
+    @Scheduled(fixedDelay = 50)
     public void captureAndProcessFrames() {
         try {
             if (videoStream == null) {
