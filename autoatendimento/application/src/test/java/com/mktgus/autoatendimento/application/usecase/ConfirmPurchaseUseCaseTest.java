@@ -424,6 +424,23 @@ class ConfirmPurchaseUseCaseTest {
         public Optional<Order> findById(Long id) {
             return Optional.ofNullable(orders.get(id));
         }
+
+        @Override
+        public List<Order> findByCustomerCpf(Long customerCpf) {
+            return orders.values().stream()
+                    .filter(order -> customerCpf.equals(order.customerCpf()))
+                    .toList();
+        }
+
+        @Override
+        public List<Order> search(Long marketId, LocalDateTime from, LocalDateTime to, int limit) {
+            return orders.values().stream()
+                    .filter(order -> marketId == null || marketId.equals(order.marketId()))
+                    .filter(order -> from == null || !order.orderedAt().isBefore(from))
+                    .filter(order -> to == null || !order.orderedAt().isAfter(to))
+                    .limit(limit)
+                    .toList();
+        }
     }
 
     private static final class InMemoryEmployeeGateway implements EmployeeGateway {
