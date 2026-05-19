@@ -68,6 +68,8 @@ public class ConfirmPurchaseUseCase {
 
         validateItems(items);
 
+        validateAgeRestrictedItems(items, input.ageVerifiedByRegistration());
+
         double subtotal = items.stream().mapToDouble(OrderItem::totalPrice).sum();
 
         Coupon coupon = resolveCoupon(input, subtotal);
@@ -169,6 +171,23 @@ public class ConfirmPurchaseUseCase {
                         .filter(Objects::nonNull)
                         .toList()
         );
+    }
+
+    private void validateAgeRestrictedItems(List<OrderItem> items, String ageVerifiedByRegistration) {
+        boolean hasAgeRestrictedItem = items.stream().anyMatch(OrderItem::requiresAgeVerification);
+        if (!hasAgeRestrictedItem) {
+            return;
+        }
+
+        if (ageVerifiedByRegistration == null || ageVerifiedByRegistration.isBlank()) {
+            throw new ValidationException("Produto para maiores de idade exige autorizacao de funcionario.");
+        }
+
+        Long employeeRegistration = parseEmployeeRegistration(ageVerifiedByRegistration);
+
+        if (!employeeGateway.existsByRegistration(employeeRegistration)) {
+            throw new ValidationException("Funcionario nao encontrado para autorizar compra de produto para maiores de idade.");
+        }
     }
 
     private void validateQuantity(ConfirmPurchaseInput.Item itemRequest) {

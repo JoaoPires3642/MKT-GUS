@@ -12,7 +12,9 @@ public record OrderRequest(
         @JsonAlias("cupom")
         CouponRequest coupon,
         @JsonAlias("paymentTransactionId")
-        Long paymentTransactionId
+        Long paymentTransactionId,
+        @JsonAlias({"matriculaVerificacaoIdade", "ageVerifiedByRegistration"})
+        String ageVerifiedByRegistration
 ) {
     public record OrderItemRequest(
             @JsonAlias("codigoEan")
