@@ -17,7 +17,7 @@ import NumericKeypadDialog from "@/components/numeric-keypad-dialog";
 import { onlyDigits } from "@/lib/numeric-input";
 
 interface AgeVerificationPopupProps {
-  onConfirm: () => void;
+  onConfirm: (employeeId: string) => void;
   onCancel: () => void;
 }
 
@@ -43,7 +43,7 @@ export default function AgeVerificationPopup({ onConfirm, onCancel }: AgeVerific
       });
 
       if (response.data.valid) {
-        onConfirm();
+        onConfirm(employeeId);
       } else {
         setError(response.data.message || "Matrícula inválida.");
         setShowInvalidPopup(true);

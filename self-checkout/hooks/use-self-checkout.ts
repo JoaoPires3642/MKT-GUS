@@ -144,8 +144,9 @@ export function useSelfCheckout() {
     setCurrentScreen("welcome")
   }
 
-  const handleAgeVerificationConfirm = async () => {
+  const handleAgeVerificationConfirm = async (employeeId: string) => {
     setShowAgeVerificationPopup(false)
+    setEmployeeRegistration(employeeId)
 
     try {
       const data = await fetchProductByBarcode("07896045506248")
@@ -216,6 +217,7 @@ export function useSelfCheckout() {
         cpf,
         hasCpf,
         paymentTransactionId: paidTransaction.id,
+        ageVerifiedByRegistration: employeeRegistration ?? undefined,
       })
 
       if (typeof result.updatedPointsBalance === "number") {

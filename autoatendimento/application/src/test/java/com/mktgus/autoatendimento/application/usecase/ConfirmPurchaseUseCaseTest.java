@@ -100,7 +100,8 @@ class ConfirmPurchaseUseCaseTest {
                 "529.982.247-25",
                 List.of(new ConfirmPurchaseInput.Item("789", 2, 60.0, null)),
                 new ConfirmPurchaseInput.Coupon(1L, "percentage"),
-                paymentId
+                paymentId,
+                null
         ));
 
         Order order = output.order();
@@ -133,7 +134,8 @@ class ConfirmPurchaseUseCaseTest {
                 "52998224725",
                 List.of(new ConfirmPurchaseInput.Item("789", 1, 60.0, null)),
                 new ConfirmPurchaseInput.Coupon(1L, "fixed"),
-                paymentId
+                paymentId,
+                null
         )));
     }
 
@@ -161,7 +163,8 @@ class ConfirmPurchaseUseCaseTest {
                 "52998224725",
                 List.of(new ConfirmPurchaseInput.Item("789", 1, 60.0, null)),
                 new ConfirmPurchaseInput.Coupon(1L, "percentage"),
-                paymentId
+                paymentId,
+                null
         )));
     }
 
@@ -190,7 +193,8 @@ class ConfirmPurchaseUseCaseTest {
                         new ConfirmPurchaseInput.PriceOverride("12345", 45.0, "ETIQUETA_PROMOCIONAL_NAO_ATUALIZADA")
                 )),
                 null,
-                paymentId
+                paymentId,
+                null
         ));
 
         assertEquals(45.0, output.order().totalAmount());
@@ -222,7 +226,8 @@ class ConfirmPurchaseUseCaseTest {
                         new ConfirmPurchaseInput.PriceOverride("12345", 45.0, "MOTIVO_LIVRE")
                 )),
                 null,
-                paymentId
+                paymentId,
+                null
         )));
     }
 
@@ -250,7 +255,8 @@ class ConfirmPurchaseUseCaseTest {
                 "52998224725",
                 List.of(new ConfirmPurchaseInput.Item("789", 1, 60.0, null)),
                 new ConfirmPurchaseInput.Coupon(1L, "percentage"),
-                paymentId
+                paymentId,
+                null
         )));
     }
 
@@ -272,7 +278,8 @@ class ConfirmPurchaseUseCaseTest {
                 null,
                 List.of(new ConfirmPurchaseInput.Item("789", 1, 60.0, null)),
                 null,
-                paymentId
+                paymentId,
+                null
         )));
     }
 
@@ -291,6 +298,7 @@ class ConfirmPurchaseUseCaseTest {
         assertThrows(ValidationException.class, () -> useCase.execute(new ConfirmPurchaseInput(
                 null,
                 List.of(new ConfirmPurchaseInput.Item("789", 1, 60.0, null)),
+                null,
                 null,
                 null
         )));
@@ -312,7 +320,8 @@ class ConfirmPurchaseUseCaseTest {
                 null,
                 List.of(new ConfirmPurchaseInput.Item("789", 1, 60.0, null)),
                 null,
-                999L
+                999L,
+                null
         )));
     }
 
@@ -334,7 +343,8 @@ class ConfirmPurchaseUseCaseTest {
                 null,
                 List.of(new ConfirmPurchaseInput.Item("789", 1, 60.0, null)),
                 null,
-                paymentId
+                paymentId,
+                null
         )));
     }
 
@@ -356,8 +366,58 @@ class ConfirmPurchaseUseCaseTest {
                 null,
                 List.of(new ConfirmPurchaseInput.Item("789", 1, 60.0, null)),
                 null,
-                paymentId
+                paymentId,
+                null
         )));
+    }
+
+    @Test
+    void shouldRejectAgeRestrictedProductWithoutEmployeeVerification() {
+        MercadoConfig mercadoConfig = new MercadoConfig();
+        mercadoConfig.setId(1L);
+        InMemoryPaymentTransactionGateway paymentTransactionGateway = new InMemoryPaymentTransactionGateway();
+        Long paymentId = paymentTransactionGateway.save(paidTransaction(60.0)).id();
+
+        ConfirmPurchaseUseCase useCase = buildUseCase(
+                new InMemoryOrderGateway(), new InMemoryClientGateway(), new InMemoryCouponGateway(),
+                new InMemoryEmployeeGateway(), new InMemoryPriceOverrideAuditGateway(),
+                new FindProductByBarcodeUseCase(new InMemoryProductCatalogGateway(true)),
+                new PontosConfig(), mercadoConfig, paymentTransactionGateway
+        );
+
+        assertThrows(ValidationException.class, () -> useCase.execute(new ConfirmPurchaseInput(
+                null,
+                List.of(new ConfirmPurchaseInput.Item("789", 1, 60.0, null)),
+                null,
+                paymentId,
+                null
+        )));
+    }
+
+    @Test
+    void shouldAllowAgeRestrictedProductWithValidEmployeeVerification() {
+        MercadoConfig mercadoConfig = new MercadoConfig();
+        mercadoConfig.setId(1L);
+        InMemoryPaymentTransactionGateway paymentTransactionGateway = new InMemoryPaymentTransactionGateway();
+        Long paymentId = paymentTransactionGateway.save(paidTransaction(60.0)).id();
+
+        ConfirmPurchaseUseCase useCase = buildUseCase(
+                new InMemoryOrderGateway(), new InMemoryClientGateway(), new InMemoryCouponGateway(),
+                new InMemoryEmployeeGateway(), new InMemoryPriceOverrideAuditGateway(),
+                new FindProductByBarcodeUseCase(new InMemoryProductCatalogGateway(true)),
+                new PontosConfig(), mercadoConfig, paymentTransactionGateway
+        );
+
+        ConfirmPurchaseOutput output = useCase.execute(new ConfirmPurchaseInput(
+                null,
+                List.of(new ConfirmPurchaseInput.Item("789", 1, 60.0, null)),
+                null,
+                paymentId,
+                "12345"
+        ));
+
+        assertEquals(60.0, output.order().totalAmount());
+        assertEquals("789", output.order().items().getFirst().ean());
     }
 
     // ----------------------------------------------------------------
@@ -460,9 +520,19 @@ class ConfirmPurchaseUseCaseTest {
     }
 
     private static final class InMemoryProductCatalogGateway implements ProductCatalogGateway {
+        private final boolean adultOnly;
+
+        InMemoryProductCatalogGateway() {
+            this(false);
+        }
+
+        InMemoryProductCatalogGateway(boolean adultOnly) {
+            this.adultOnly = adultOnly;
+        }
+
         @Override
         public Optional<Product> findByBarcode(String barcode) {
-            return Optional.of(new Product(barcode, "Produto Teste", null, 60.0, false, null));
+            return Optional.of(new Product(barcode, "Produto Teste", null, 60.0, adultOnly, null));
         }
     }
 

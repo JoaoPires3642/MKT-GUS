@@ -60,9 +60,10 @@ export async function confirmPurchase(params: {
   cpf: string
   hasCpf: boolean
   paymentTransactionId: number
+  ageVerifiedByRegistration?: string
 }): Promise<ConfirmPurchaseResult> {
-  const { appliedCoupon, cart, cpf, hasCpf, paymentTransactionId } = params
-  const payload = {
+  const { appliedCoupon, cart, cpf, hasCpf, paymentTransactionId, ageVerifiedByRegistration } = params
+  const payload: Record<string, unknown> = {
     clienteCpf: hasCpf && cpf ? cpf.replace(/\D/g, "") : null,
     paymentTransactionId,
     itens: cart.map((item) => ({
@@ -78,6 +79,10 @@ export async function confirmPurchase(params: {
           tipoDesconto: appliedCoupon.type,
         }
       : null,
+  }
+
+  if (ageVerifiedByRegistration) {
+    payload.matriculaVerificacaoIdade = ageVerifiedByRegistration
   }
 
   const response = await fetch(`${API_BASE_URL}/pedidos/confirmar-compra`, {
