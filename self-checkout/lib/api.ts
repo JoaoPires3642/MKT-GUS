@@ -36,7 +36,7 @@ export async function verifyEmployeeRegistration(registration: string) {
   const response = await axios.post(`${API_BASE_URL}/api/funcionarios/verificar-matricula`, {
     matricula: registration,
   })
-  return response.data as { message?: string; valid?: boolean }
+  return response.data as { message?: string; valid?: boolean; name?: string }
 }
 
 export async function fetchProductByBarcode(barcode: string) {

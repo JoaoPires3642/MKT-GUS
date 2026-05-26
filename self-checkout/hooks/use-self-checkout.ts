@@ -28,6 +28,7 @@ export function useSelfCheckout() {
   const [showBarcodeInputPopup, setShowBarcodeInputPopup] = useState(false)
   const [showEmployeeCartPopup, setShowEmployeeCartPopup] = useState(false)
   const [employeeRegistration, setEmployeeRegistration] = useState<string | null>(null)
+  const [employeeName, setEmployeeName] = useState<string | null>(null)
   const [selectedProductForPriceAdjust, setSelectedProductForPriceAdjust] = useState<Product | null>(null)
   const [cpf, setCpf] = useState("")
   const [cart, setCart] = useState<Product[]>([])
@@ -141,15 +142,18 @@ export function useSelfCheckout() {
     setPaymentTransaction(null)
     setPaymentStatus(null)
     setPaymentError(null)
+    setEmployeeRegistration(null)
+    setEmployeeName(null)
     setCurrentScreen("welcome")
   }
 
-  const handleAgeVerificationConfirm = async (employeeId: string) => {
+  const handleAgeVerificationConfirm = async (employeeId: string, empName: string) => {
     setShowAgeVerificationPopup(false)
     setEmployeeRegistration(employeeId)
+    setEmployeeName(empName)
 
     try {
-      const data = await fetchProductByBarcode("07896045506248")
+      const data = await fetchProductByBarcode("7896045503919")
       const product = mapBackendProduct(data, {
         image: "",
         isAdult: true,
@@ -192,7 +196,7 @@ export function useSelfCheckout() {
       ),
     )
     setSelectedProductForPriceAdjust(null)
-    setNotification(`Preco ajustado manualmente pela matricula ${priceOverride.employeeRegistration}.`)
+    setNotification(`Preco ajustado manualmente por ${employeeName ?? priceOverride.employeeRegistration}.`)
   }
 
   const handlePaymentConfirm = async (method: PaymentMethod) => {
@@ -228,6 +232,8 @@ export function useSelfCheckout() {
       setPaymentStatus(null)
       setCart([])
       setAppliedCoupon(null)
+      setEmployeeRegistration(null)
+      setEmployeeName(null)
       setCurrentScreen("success")
     } catch (error) {
       const message = error instanceof Error ? error.message : "Erro ao finalizar a compra. Tente novamente."
@@ -275,8 +281,9 @@ export function useSelfCheckout() {
           const employee = await verifyEmployeeRegistration(barcode)
           if (employee.valid) {
             setEmployeeRegistration(barcode)
+            setEmployeeName(employee.name ?? "")
             setShowEmployeeCartPopup(true)
-            setNotification(`Matricula ${barcode} validada. Selecione um item para ajustar.`)
+            setNotification(`Funcionario ${employee.name ?? barcode} validado. Selecione um item para ajustar.`)
             return
           }
         } catch {
@@ -329,6 +336,7 @@ export function useSelfCheckout() {
       completedPurchase,
       cpf,
       currentScreen,
+      employeeName,
       employeeRegistration,
       hasCpf,
       notification,

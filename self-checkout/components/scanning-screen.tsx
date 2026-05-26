@@ -23,6 +23,7 @@ interface ScanningScreenProps {
   onBarcodeInputClick: () => void
   appliedCoupon: Coupon | null
   pointsToEarn: number
+  employeeName?: string
 }
 
 interface ProdutoDto {
@@ -48,12 +49,13 @@ export default function ScanningScreen({
                                            onAddProduct,
                                            onCheckout,
                                          onCancel,
-                                         onAddBeerClick,
-                                         onMyPointsClick,
-                                         onBarcodeInputClick,
-                                         appliedCoupon,
-                                         pointsToEarn,
-                                       }: ScanningScreenProps) {
+                                          onAddBeerClick,
+                                          onMyPointsClick,
+                                          onBarcodeInputClick,
+                                          appliedCoupon,
+                                          pointsToEarn,
+                                          employeeName,
+                                        }: ScanningScreenProps) {
   const [stompClient, setStompClient] = useState<Client | null>(null)
   const [notification, setNotification] = useState<string | null>(null)
 
@@ -222,7 +224,7 @@ export default function ScanningScreen({
                           {item.priceOverride && (
                             <div className="text-sm text-primary">
                               <div>Preco ajustado manualmente</div>
-                              <div>Autorizado por matrícula {item.priceOverride.employeeRegistration}</div>
+                              <div>Autorizado por {employeeName || item.priceOverride.employeeRegistration}</div>
                               <div>Motivo: {getPriceOverrideReasonLabel(item.priceOverride.reason)}</div>
                             </div>
                           )}

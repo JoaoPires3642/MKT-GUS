@@ -6,6 +6,7 @@ import com.mktgus.autoatendimento.application.purchase.ConfirmPurchaseOutput;
 import com.mktgus.autoatendimento.application.gateway.ClientGateway;
 import com.mktgus.autoatendimento.application.gateway.CouponGateway;
 import com.mktgus.autoatendimento.application.gateway.EmployeeGateway;
+import com.mktgus.autoatendimento.application.gateway.EmployeeInfo;
 import com.mktgus.autoatendimento.application.gateway.OrderGateway;
 import com.mktgus.autoatendimento.application.gateway.PaymentTransactionGateway;
 import com.mktgus.autoatendimento.application.gateway.PriceOverrideAuditGateway;
@@ -507,6 +508,14 @@ class ConfirmPurchaseUseCaseTest {
         @Override
         public boolean existsByRegistration(Long registration) {
             return 12345L == registration;
+        }
+
+        @Override
+        public Optional<EmployeeInfo> findByRegistration(Long registration) {
+            if (12345L == registration) {
+                return Optional.of(new EmployeeInfo(registration, "Test Employee"));
+            }
+            return Optional.empty();
         }
     }
 

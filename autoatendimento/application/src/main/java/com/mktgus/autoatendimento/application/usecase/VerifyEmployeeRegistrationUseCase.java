@@ -1,9 +1,12 @@
 package com.mktgus.autoatendimento.application.usecase;
 
+import com.mktgus.autoatendimento.application.gateway.EmployeeGateway;
+import com.mktgus.autoatendimento.application.gateway.EmployeeInfo;
 import com.mktgus.autoatendimento.application.verification.VerifyEmployeeRegistrationInput;
 import com.mktgus.autoatendimento.application.exception.ValidationException;
-import com.mktgus.autoatendimento.application.gateway.EmployeeGateway;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
 
 @Service
 public class VerifyEmployeeRegistrationUseCase {
@@ -13,9 +16,9 @@ public class VerifyEmployeeRegistrationUseCase {
         this.employeeGateway = employeeGateway;
     }
 
-    public boolean execute(VerifyEmployeeRegistrationInput input) {
+    public Optional<EmployeeInfo> execute(VerifyEmployeeRegistrationInput input) {
         try {
-            return employeeGateway.existsByRegistration(Long.parseLong(input.registration()));
+            return employeeGateway.findByRegistration(Long.parseLong(input.registration()));
         } catch (NumberFormatException exception) {
             throw new ValidationException("Matricula invalida.");
         }

@@ -70,6 +70,7 @@ export default function Home() {
                   onBarcodeInputClick={() => actions.setShowBarcodeInputPopup(true)}
                   appliedCoupon={state.appliedCoupon}
                   pointsToEarn={state.pointsToEarn}
+                  employeeName={state.employeeName ?? undefined}
               />
           )}
           {state.currentScreen === "payment" && (
@@ -146,6 +147,7 @@ export default function Home() {
                 <EmployeeCartPopup
                     cart={state.cart}
                     employeeRegistration={state.employeeRegistration}
+                    employeeName={state.employeeName ?? ""}
                     onSelectProduct={handleOpenPriceAdjust}
                     onClose={() => actions.setShowEmployeeCartPopup(false)}
                 />
@@ -156,6 +158,7 @@ export default function Home() {
                 <AuthorizePricePopup
                     product={state.selectedProductForPriceAdjust}
                     employeeRegistration={state.employeeRegistration ?? ""}
+                    employeeName={state.employeeName ?? ""}
                     onCancel={() => actions.setSelectedProductForPriceAdjust(null)}
                     onConfirm={actions.handleApplyPriceAdjust}
                 />
