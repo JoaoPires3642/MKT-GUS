@@ -15,6 +15,9 @@ spring:
     properties:
       hibernate:
         format_sql: ${SPRING_JPA_FORMAT_SQL:false}
+  sql:
+    init:
+      mode: always
   mail:
     host: ${SPRING_MAIL_HOST:localhost}
     port: ${SPRING_MAIL_PORT:25}
