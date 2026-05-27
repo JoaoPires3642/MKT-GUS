@@ -21,8 +21,10 @@ interface ScanningScreenProps {
   onAddBeerClick: () => void
   onMyPointsClick: () => void
   onBarcodeInputClick: () => void
+  onAdultProductScanned: (product: Product) => void
   appliedCoupon: Coupon | null
   pointsToEarn: number
+  employeeName?: string
 }
 
 interface ProdutoDto {
@@ -48,12 +50,14 @@ export default function ScanningScreen({
                                            onAddProduct,
                                            onCheckout,
                                          onCancel,
-                                         onAddBeerClick,
-                                         onMyPointsClick,
-                                         onBarcodeInputClick,
-                                         appliedCoupon,
-                                         pointsToEarn,
-                                       }: ScanningScreenProps) {
+                                          onAddBeerClick,
+                                          onMyPointsClick,
+                                           onBarcodeInputClick,
+                                           onAdultProductScanned,
+                                           appliedCoupon,
+                                           pointsToEarn,
+                                           employeeName,
+                                         }: ScanningScreenProps) {
   const [stompClient, setStompClient] = useState<Client | null>(null)
   const [notification, setNotification] = useState<string | null>(null)
 
@@ -80,6 +84,12 @@ export default function ScanningScreen({
 
             const scannedEan = product.ean
             const existingProduct = cart.find((item) => item.ean === scannedEan)
+
+            if (product.isAdult && !existingProduct) {
+              onAdultProductScanned(product)
+              return
+            }
+
             if (existingProduct) {
               onUpdateQuantity(existingProduct.id, existingProduct.quantity + 1)
             } else {
@@ -222,7 +232,7 @@ export default function ScanningScreen({
                           {item.priceOverride && (
                             <div className="text-sm text-primary">
                               <div>Preco ajustado manualmente</div>
-                              <div>Autorizado por matrícula {item.priceOverride.employeeRegistration}</div>
+                              <div>Autorizado por {employeeName || item.priceOverride.employeeRegistration}</div>
                               <div>Motivo: {getPriceOverrideReasonLabel(item.priceOverride.reason)}</div>
                             </div>
                           )}

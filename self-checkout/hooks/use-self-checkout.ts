@@ -28,6 +28,7 @@ export function useSelfCheckout() {
   const [showBarcodeInputPopup, setShowBarcodeInputPopup] = useState(false)
   const [showEmployeeCartPopup, setShowEmployeeCartPopup] = useState(false)
   const [employeeRegistration, setEmployeeRegistration] = useState<string | null>(null)
+  const [employeeName, setEmployeeName] = useState<string | null>(null)
   const [selectedProductForPriceAdjust, setSelectedProductForPriceAdjust] = useState<Product | null>(null)
   const [cpf, setCpf] = useState("")
   const [cart, setCart] = useState<Product[]>([])
@@ -39,6 +40,7 @@ export function useSelfCheckout() {
   const [paymentError, setPaymentError] = useState<string | null>(null)
   const [isProcessingPayment, setIsProcessingPayment] = useState(false)
   const [notification, setNotification] = useState<string | null>(null)
+  const [pendingAdultProduct, setPendingAdultProduct] = useState<Product | null>(null)
 
   const subtotal = useMemo(() => cart.reduce((sum, item) => sum + item.price * item.quantity, 0), [cart])
   const pointsToEarn = useMemo(() => Math.floor(subtotal / POINTS_VALUE_PER_BLOCK) * POINTS_PER_BLOCK, [subtotal])
@@ -141,15 +143,24 @@ export function useSelfCheckout() {
     setPaymentTransaction(null)
     setPaymentStatus(null)
     setPaymentError(null)
+    setEmployeeRegistration(null)
+    setEmployeeName(null)
     setCurrentScreen("welcome")
   }
 
-  const handleAgeVerificationConfirm = async (employeeId: string) => {
+  const handleAgeVerificationConfirm = async (employeeId: string, empName: string) => {
     setShowAgeVerificationPopup(false)
     setEmployeeRegistration(employeeId)
+    setEmployeeName(empName)
+
+    if (pendingAdultProduct) {
+      addProduct(pendingAdultProduct)
+      setPendingAdultProduct(null)
+      return
+    }
 
     try {
-      const data = await fetchProductByBarcode("07896045506248")
+      const data = await fetchProductByBarcode("7896045503919")
       const product = mapBackendProduct(data, {
         image: "",
         isAdult: true,
@@ -167,6 +178,16 @@ export function useSelfCheckout() {
     } catch {
       setNotification("Erro ao adicionar cerveja. Tente novamente.")
     }
+  }
+
+  const handleAdultProductScanned = (product: Product) => {
+    setPendingAdultProduct(product)
+    setShowAgeVerificationPopup(true)
+  }
+
+  const handleAgeVerificationCancel = () => {
+    setShowAgeVerificationPopup(false)
+    setPendingAdultProduct(null)
   }
 
   const handleApplyCoupon = (coupon: Coupon) => {
@@ -192,7 +213,7 @@ export function useSelfCheckout() {
       ),
     )
     setSelectedProductForPriceAdjust(null)
-    setNotification(`Preco ajustado manualmente pela matricula ${priceOverride.employeeRegistration}.`)
+    setNotification(`Preco ajustado manualmente por ${employeeName ?? priceOverride.employeeRegistration}.`)
   }
 
   const handlePaymentConfirm = async (method: PaymentMethod) => {
@@ -228,6 +249,8 @@ export function useSelfCheckout() {
       setPaymentStatus(null)
       setCart([])
       setAppliedCoupon(null)
+      setEmployeeRegistration(null)
+      setEmployeeName(null)
       setCurrentScreen("success")
     } catch (error) {
       const message = error instanceof Error ? error.message : "Erro ao finalizar a compra. Tente novamente."
@@ -275,8 +298,9 @@ export function useSelfCheckout() {
           const employee = await verifyEmployeeRegistration(barcode)
           if (employee.valid) {
             setEmployeeRegistration(barcode)
+            setEmployeeName(employee.name ?? "")
             setShowEmployeeCartPopup(true)
-            setNotification(`Matricula ${barcode} validada. Selecione um item para ajustar.`)
+            setNotification(`Funcionario ${employee.name ?? barcode} validado. Selecione um item para ajustar.`)
             return
           }
         } catch {
@@ -291,6 +315,12 @@ export function useSelfCheckout() {
         return
       }
 
+      if (product.isAdult) {
+        setPendingAdultProduct(product)
+        setShowAgeVerificationPopup(true)
+        return
+      }
+
       addProduct(product)
     } catch {
       setNotification(`Erro ao buscar produto para o código: ${barcode}`)
@@ -300,6 +330,8 @@ export function useSelfCheckout() {
   return {
     actions: {
       addProduct,
+      handleAdultProductScanned,
+      handleAgeVerificationCancel,
       handleAgeVerificationConfirm,
       handleApplyCoupon,
       handleApplyPriceAdjust,
@@ -329,6 +361,7 @@ export function useSelfCheckout() {
       completedPurchase,
       cpf,
       currentScreen,
+      employeeName,
       employeeRegistration,
       hasCpf,
       notification,

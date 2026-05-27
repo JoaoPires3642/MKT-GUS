@@ -7,21 +7,22 @@ import type { Product } from "@/lib/types"
 interface EmployeeCartPopupProps {
   cart: Product[]
   employeeRegistration: string
+  employeeName: string
   onSelectProduct: (product: Product) => void
   onClose: () => void
 }
 
-export default function EmployeeCartPopup({ cart, employeeRegistration, onSelectProduct, onClose }: EmployeeCartPopupProps) {
+export default function EmployeeCartPopup({ cart, employeeRegistration, employeeName, onSelectProduct, onClose }: EmployeeCartPopupProps) {
   return (
     <Card className="relative border-2 rounded-lg shadow-sm w-[720px]">
       <CardContent className="p-8 space-y-6">
         <div className="space-y-2">
           <h2 className="text-2xl font-bold">Atendimento do funcionário</h2>
-          <p className="text-base text-gray-500">Matrícula validada: {employeeRegistration}. Selecione um item do carrinho para ajustar.</p>
+          <p className="text-base text-gray-500">Funcionário: {employeeName || employeeRegistration}. Selecione um item do carrinho para ajustar.</p>
         </div>
 
         <div className="rounded-md bg-primary/10 p-4 text-sm text-primary">
-          Modo autorizacao ativo. O proximo item selecionado recebera um ajuste manual identificado pela matricula {employeeRegistration}.
+          Modo autorizacao ativo. O proximo item selecionado recebera um ajuste manual identificado por {employeeName || employeeRegistration}.
         </div>
 
         {cart.length === 0 ? (

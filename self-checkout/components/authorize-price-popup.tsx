@@ -11,11 +11,12 @@ import type { PriceOverride, Product } from "@/lib/types"
 interface AuthorizePricePopupProps {
   product: Product
   employeeRegistration: string
+  employeeName: string
   onCancel: () => void
   onConfirm: (productId: number, newPrice: number, priceOverride: PriceOverride) => void
 }
 
-export default function AuthorizePricePopup({ product, employeeRegistration, onCancel, onConfirm }: AuthorizePricePopupProps) {
+export default function AuthorizePricePopup({ product, employeeRegistration, employeeName, onCancel, onConfirm }: AuthorizePricePopupProps) {
   const [newPrice, setNewPrice] = useState(product.price.toFixed(2).replace(".", ","))
   const [reason, setReason] = useState(product.priceOverride?.reason ?? "ETIQUETA_PROMOCIONAL_NAO_ATUALIZADA")
   const [error, setError] = useState<string | null>(null)
@@ -56,7 +57,7 @@ export default function AuthorizePricePopup({ product, employeeRegistration, onC
         </div>
 
         <div className="rounded-md bg-primary/10 p-4 text-sm text-primary">
-          Matrícula autorizada: {employeeRegistration}
+          Autorizado por: {employeeName || employeeRegistration}
         </div>
 
         <div className="rounded-md bg-amber-50 p-4 text-sm text-amber-800">

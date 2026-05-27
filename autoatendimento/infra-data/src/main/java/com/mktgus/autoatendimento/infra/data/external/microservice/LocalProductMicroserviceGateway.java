@@ -117,6 +117,7 @@ public class LocalProductMicroserviceGateway implements ProductCatalogGateway {
             })
             String imageUrl,
             Double price,
+            @JsonAlias({"isOver18", "is_over18", "adultOnly", "adult_only", "produtoMaiorDeIdade"})
             Boolean adultOnly,
             String description
     ) {

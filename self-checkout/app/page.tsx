@@ -68,8 +68,10 @@ export default function Home() {
                   onAddBeerClick={() => actions.setShowAgeVerificationPopup(true)}
                   onMyPointsClick={handleMyPointsClick}
                   onBarcodeInputClick={() => actions.setShowBarcodeInputPopup(true)}
+                  onAdultProductScanned={actions.handleAdultProductScanned}
                   appliedCoupon={state.appliedCoupon}
                   pointsToEarn={state.pointsToEarn}
+                  employeeName={state.employeeName ?? undefined}
               />
           )}
           {state.currentScreen === "payment" && (
@@ -105,7 +107,7 @@ export default function Home() {
               <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                 <AgeVerificationPopup
                     onConfirm={actions.handleAgeVerificationConfirm}
-                    onCancel={() => actions.setShowAgeVerificationPopup(false)}
+                    onCancel={actions.handleAgeVerificationCancel}
                 />
               </div>
           )}
@@ -146,6 +148,7 @@ export default function Home() {
                 <EmployeeCartPopup
                     cart={state.cart}
                     employeeRegistration={state.employeeRegistration}
+                    employeeName={state.employeeName ?? ""}
                     onSelectProduct={handleOpenPriceAdjust}
                     onClose={() => actions.setShowEmployeeCartPopup(false)}
                 />
@@ -156,6 +159,7 @@ export default function Home() {
                 <AuthorizePricePopup
                     product={state.selectedProductForPriceAdjust}
                     employeeRegistration={state.employeeRegistration ?? ""}
+                    employeeName={state.employeeName ?? ""}
                     onCancel={() => actions.setSelectedProductForPriceAdjust(null)}
                     onConfirm={actions.handleApplyPriceAdjust}
                 />
