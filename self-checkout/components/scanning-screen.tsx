@@ -21,6 +21,7 @@ interface ScanningScreenProps {
   onAddBeerClick: () => void
   onMyPointsClick: () => void
   onBarcodeInputClick: () => void
+  onAdultProductScanned: (product: Product) => void
   appliedCoupon: Coupon | null
   pointsToEarn: number
   employeeName?: string
@@ -51,11 +52,12 @@ export default function ScanningScreen({
                                          onCancel,
                                           onAddBeerClick,
                                           onMyPointsClick,
-                                          onBarcodeInputClick,
-                                          appliedCoupon,
-                                          pointsToEarn,
-                                          employeeName,
-                                        }: ScanningScreenProps) {
+                                           onBarcodeInputClick,
+                                           onAdultProductScanned,
+                                           appliedCoupon,
+                                           pointsToEarn,
+                                           employeeName,
+                                         }: ScanningScreenProps) {
   const [stompClient, setStompClient] = useState<Client | null>(null)
   const [notification, setNotification] = useState<string | null>(null)
 
@@ -82,6 +84,12 @@ export default function ScanningScreen({
 
             const scannedEan = product.ean
             const existingProduct = cart.find((item) => item.ean === scannedEan)
+
+            if (product.isAdult && !existingProduct) {
+              onAdultProductScanned(product)
+              return
+            }
+
             if (existingProduct) {
               onUpdateQuantity(existingProduct.id, existingProduct.quantity + 1)
             } else {

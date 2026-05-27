@@ -40,6 +40,7 @@ export function useSelfCheckout() {
   const [paymentError, setPaymentError] = useState<string | null>(null)
   const [isProcessingPayment, setIsProcessingPayment] = useState(false)
   const [notification, setNotification] = useState<string | null>(null)
+  const [pendingAdultProduct, setPendingAdultProduct] = useState<Product | null>(null)
 
   const subtotal = useMemo(() => cart.reduce((sum, item) => sum + item.price * item.quantity, 0), [cart])
   const pointsToEarn = useMemo(() => Math.floor(subtotal / POINTS_VALUE_PER_BLOCK) * POINTS_PER_BLOCK, [subtotal])
@@ -152,6 +153,12 @@ export function useSelfCheckout() {
     setEmployeeRegistration(employeeId)
     setEmployeeName(empName)
 
+    if (pendingAdultProduct) {
+      addProduct(pendingAdultProduct)
+      setPendingAdultProduct(null)
+      return
+    }
+
     try {
       const data = await fetchProductByBarcode("7896045503919")
       const product = mapBackendProduct(data, {
@@ -171,6 +178,16 @@ export function useSelfCheckout() {
     } catch {
       setNotification("Erro ao adicionar cerveja. Tente novamente.")
     }
+  }
+
+  const handleAdultProductScanned = (product: Product) => {
+    setPendingAdultProduct(product)
+    setShowAgeVerificationPopup(true)
+  }
+
+  const handleAgeVerificationCancel = () => {
+    setShowAgeVerificationPopup(false)
+    setPendingAdultProduct(null)
   }
 
   const handleApplyCoupon = (coupon: Coupon) => {
@@ -298,6 +315,12 @@ export function useSelfCheckout() {
         return
       }
 
+      if (product.isAdult) {
+        setPendingAdultProduct(product)
+        setShowAgeVerificationPopup(true)
+        return
+      }
+
       addProduct(product)
     } catch {
       setNotification(`Erro ao buscar produto para o código: ${barcode}`)
@@ -307,6 +330,8 @@ export function useSelfCheckout() {
   return {
     actions: {
       addProduct,
+      handleAdultProductScanned,
+      handleAgeVerificationCancel,
       handleAgeVerificationConfirm,
       handleApplyCoupon,
       handleApplyPriceAdjust,
