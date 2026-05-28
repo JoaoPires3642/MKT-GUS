@@ -175,6 +175,18 @@ describe("useSelfCheckout payment flow", () => {
     expect(result.current.state.notification).toBe("Saldo de pontos insuficiente para aplicar este cupom.")
   })
 
+  it("shows product lookup error from backend", async () => {
+    vi.mocked(api.fetchProductByBarcode).mockRejectedValue(new Error("Produto nao encontrado para o codigo informado."))
+
+    const { result } = renderHook(() => useSelfCheckout())
+
+    await act(async () => {
+      await result.current.actions.handleBarcodeSubmit("789")
+    })
+
+    expect(result.current.state.notification).toBe("Produto nao encontrado para o codigo informado.")
+  })
+
   it("times out when payment remains processing", async () => {
     vi.useFakeTimers()
     vi.mocked(api.startPayment).mockResolvedValue(paymentProcessing)

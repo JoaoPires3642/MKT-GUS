@@ -40,8 +40,17 @@ export async function verifyEmployeeRegistration(registration: string) {
 }
 
 export async function fetchProductByBarcode(barcode: string) {
-  const response = await axios.post(`${API_BASE_URL}/produtos/buscar`, { barcode })
-  return response.data as RawProduct
+  try {
+    const response = await axios.post(`${API_BASE_URL}/produtos/buscar`, { barcode })
+    return response.data as RawProduct
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const message = (error.response?.data as { message?: string } | undefined)?.message
+      throw new Error(message ?? "Erro ao buscar produto")
+    }
+
+    throw error
+  }
 }
 
 export async function fetchCoupons() {

@@ -10,6 +10,7 @@ import {
   startPayment,
   verifyEmployeeRegistration,
 } from "@/lib/api"
+import { playProductDetectedBeep } from "@/lib/scan-feedback"
 import type { ConfirmPurchaseResult, Coupon, PaymentMethod, PaymentStatus, PaymentTransactionResult, PriceOverride, Product } from "@/lib/types"
 
 const POINTS_VALUE_PER_BLOCK = 5
@@ -316,14 +317,17 @@ export function useSelfCheckout() {
       }
 
       if (product.isAdult) {
+        playProductDetectedBeep()
         setPendingAdultProduct(product)
         setShowAgeVerificationPopup(true)
         return
       }
 
       addProduct(product)
-    } catch {
-      setNotification(`Erro ao buscar produto para o código: ${barcode}`)
+      playProductDetectedBeep()
+    } catch (error) {
+      const message = error instanceof Error ? error.message : `Erro ao buscar produto para o código: ${barcode}`
+      setNotification(message)
     }
   }
 

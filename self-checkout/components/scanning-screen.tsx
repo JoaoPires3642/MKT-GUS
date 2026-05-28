@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { mapBackendProduct } from "@/lib/api"
 import { getPriceOverrideReasonLabel } from "@/lib/price-override-reasons"
+import { playProductDetectedBeep } from "@/lib/scan-feedback"
 import type { Product, Coupon } from "@/lib/types"
 import { Beer, Award, Scan, Trash2, Barcode } from "lucide-react"
 import Image from "next/image"
@@ -86,6 +87,7 @@ export default function ScanningScreen({
             const existingProduct = cart.find((item) => item.ean === scannedEan)
 
             if (product.isAdult && !existingProduct) {
+              playProductDetectedBeep()
               onAdultProductScanned(product)
               return
             }
@@ -95,6 +97,7 @@ export default function ScanningScreen({
             } else {
               onAddProduct(product)
             }
+            playProductDetectedBeep()
           }
         })
       },
@@ -112,7 +115,7 @@ export default function ScanningScreen({
     return () => {
       client.deactivate()
     }
-  }, [cart, onAddProduct, onUpdateQuantity])
+  }, [cart, onAddProduct, onAdultProductScanned, onUpdateQuantity])
 
   const calculateSubtotal = () => {
     return cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
