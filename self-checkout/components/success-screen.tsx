@@ -53,6 +53,8 @@ function getPaymentMethodLabel(paymentMethod: PaymentMethod | null) {
 export default function SuccessScreen({ order, paymentMethod, onNewPurchase }: SuccessScreenProps) {
   const taxStatus = order.taxDocument?.status ?? "PENDING"
   const isIssued = taxStatus === "ISSUED"
+  const subtotal = order.items.reduce((sum, item) => sum + item.totalPrice, 0)
+  const couponDiscount = Math.max(0, subtotal - order.totalAmount)
 
   useEffect(() => {
     const timer = window.setTimeout(() => onNewPurchase(), AUTO_CLOSE_MS)
@@ -144,6 +146,19 @@ export default function SuccessScreen({ order, paymentMethod, onNewPurchase }: S
         </div>
 
         <div className="border-t border-dashed border-black pt-4">
+          {couponDiscount > 0.01 && (
+            <>
+              <div className="flex items-center justify-between text-sm">
+                <span>Subtotal</span>
+                <span>{formatCurrency(subtotal)}</span>
+              </div>
+              <div className="mt-1 flex items-center justify-between text-sm">
+                <span>Desconto de cupom</span>
+                <span>- {formatCurrency(couponDiscount)}</span>
+              </div>
+            </>
+          )}
+
           <div className="flex items-center justify-between text-base font-bold">
             <span>Total da compra</span>
             <span>{formatCurrency(order.totalAmount)}</span>

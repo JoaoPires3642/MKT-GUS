@@ -51,6 +51,15 @@ describe("SuccessScreen", () => {
     expect(screen.getByText("Cartao de debito")).toBeInTheDocument()
   })
 
+  it("shows coupon discount in fiscal print data", () => {
+    render(<SuccessScreen order={{ ...order, couponId: 1, totalAmount: 20 }} paymentMethod="PIX" onNewPurchase={vi.fn()} />)
+
+    expect(screen.getByText("Subtotal")).toBeInTheDocument()
+    expect(screen.getByText("Desconto de cupom")).toBeInTheDocument()
+    expect(screen.getByText("- R$ 4,50")).toBeInTheDocument()
+    expect(screen.getByText("R$ 20,00")).toBeInTheDocument()
+  })
+
   it("starts a new purchase when requested", () => {
     const onNewPurchase = vi.fn()
 

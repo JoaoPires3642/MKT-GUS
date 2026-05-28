@@ -31,6 +31,7 @@ export function useSelfCheckout() {
   const [employeeRegistration, setEmployeeRegistration] = useState<string | null>(null)
   const [employeeName, setEmployeeName] = useState<string | null>(null)
   const [selectedProductForPriceAdjust, setSelectedProductForPriceAdjust] = useState<Product | null>(null)
+  const [pendingRemovalProductId, setPendingRemovalProductId] = useState<number | null>(null)
   const [cpf, setCpf] = useState("")
   const [cart, setCart] = useState<Product[]>([])
   const [hasCpf, setHasCpf] = useState(false)
@@ -102,8 +103,20 @@ export function useSelfCheckout() {
     })
   }
 
-  const removeProduct = (productId: number) => {
+  const removeProductFromCart = (productId: number, employeeId: string) => {
     setCart((currentCart) => currentCart.filter((item) => item.id !== productId))
+    setNotification(`Produto removido por funcionario ${employeeName ?? employeeId}.`)
+  }
+
+  const removeProduct = (productId: number) => {
+    if (employeeRegistration) {
+      removeProductFromCart(productId, employeeRegistration)
+      return
+    }
+
+    setPendingRemovalProductId(productId)
+    setShowBarcodeInputPopup(true)
+    setNotification("Valide um funcionario para remover o produto.")
   }
 
   const handleCpfSubmit = async (value: string, points = 0) => {
@@ -146,6 +159,7 @@ export function useSelfCheckout() {
     setPaymentError(null)
     setEmployeeRegistration(null)
     setEmployeeName(null)
+    setPendingRemovalProductId(null)
     setCurrentScreen("welcome")
   }
 
@@ -262,6 +276,11 @@ export function useSelfCheckout() {
     }
   }
 
+  const handleBarcodeInputCancel = () => {
+    setPendingRemovalProductId(null)
+    setShowBarcodeInputPopup(false)
+  }
+
   const waitForConfirmedPayment = async (paymentId: number) => {
     for (let attempt = 0; attempt < 10; attempt += 1) {
       const statusResult = await fetchPaymentStatus(paymentId)
@@ -287,6 +306,27 @@ export function useSelfCheckout() {
     const normalizedBarcode = barcode.trim().toUpperCase()
 
     try {
+      if (pendingRemovalProductId !== null) {
+        if (normalizedBarcode === EMPLOYEE_BYPASS_CODE) {
+          setEmployeeRegistration(EMPLOYEE_BYPASS_CODE)
+          removeProductFromCart(pendingRemovalProductId, EMPLOYEE_BYPASS_CODE)
+          setPendingRemovalProductId(null)
+          return
+        }
+
+        const employee = await verifyEmployeeRegistration(barcode)
+        if (!employee.valid) {
+          setNotification("Funcionario invalido. Produto nao removido.")
+          return
+        }
+
+        setEmployeeRegistration(barcode)
+        setEmployeeName(employee.name ?? "")
+        removeProductFromCart(pendingRemovalProductId, employee.name ?? barcode)
+        setPendingRemovalProductId(null)
+        return
+      }
+
       if (cart.length > 0) {
         if (normalizedBarcode === EMPLOYEE_BYPASS_CODE) {
           setEmployeeRegistration(EMPLOYEE_BYPASS_CODE)
@@ -339,6 +379,7 @@ export function useSelfCheckout() {
       handleAgeVerificationConfirm,
       handleApplyCoupon,
       handleApplyPriceAdjust,
+      handleBarcodeInputCancel,
       handleBarcodeSubmit,
       handleCancelConfirm,
       handleCpfInputSubmit,
@@ -375,6 +416,7 @@ export function useSelfCheckout() {
       paymentError,
       paymentStatus,
       paymentTransaction,
+      pendingRemovalProductId,
       selectedProductForPriceAdjust,
       showAgeVerificationPopup,
       showBarcodeInputPopup,

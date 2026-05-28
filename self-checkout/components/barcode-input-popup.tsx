@@ -13,9 +13,20 @@ import { onlyDigits } from "@/lib/numeric-input"
 interface BarcodeInputPopupProps {
   onSubmit: (barcode: string) => void
   onCancel: () => void
+  title?: string
+  description?: string
+  placeholder?: string
+  submitLabel?: string
 }
 
-export default function BarcodeInputPopup({ onSubmit, onCancel }: BarcodeInputPopupProps) {
+export default function BarcodeInputPopup({
+  onSubmit,
+  onCancel,
+  title = "Inserir Código de Barras",
+  description = "Toque no campo para abrir o teclado numérico.",
+  placeholder = "Digite o código de barras",
+  submitLabel = "Adicionar",
+}: BarcodeInputPopupProps) {
   const [barcode, setBarcode] = useState("")
   const [showKeypad, setShowKeypad] = useState(false)
 
@@ -36,14 +47,14 @@ export default function BarcodeInputPopup({ onSubmit, onCancel }: BarcodeInputPo
               <div className="mb-2 flex justify-center">
                 <Barcode className="h-10 w-10 text-primary" />
               </div>
-              <h2 className="text-2xl font-bold">Inserir Código de Barras</h2>
-              <p className="text-base text-gray-500">Toque no campo para abrir o teclado numérico.</p>
+              <h2 className="text-2xl font-bold">{title}</h2>
+              <p className="text-base text-gray-500">{description}</p>
             </div>
 
             <div className="relative overflow-visible">
               <Input
                 type="text"
-                placeholder="Digite o código de barras"
+                placeholder={placeholder}
                 value={barcode}
                 onClick={() => setShowKeypad(true)}
                 readOnly
@@ -67,7 +78,7 @@ export default function BarcodeInputPopup({ onSubmit, onCancel }: BarcodeInputPo
               Cancelar
             </Button>
               <Button type="submit" className="px-6 py-3 rounded-md text-base" disabled={!barcode.trim()}>
-                Adicionar
+                {submitLabel}
               </Button>
             </div>
           </form>

@@ -221,4 +221,27 @@ describe("useSelfCheckout payment flow", () => {
     expect(result.current.state.appliedCoupon).toBeNull()
     expect(result.current.state.currentScreen).toBe("welcome")
   })
+
+  it("requires employee validation before removing a product", async () => {
+    vi.mocked(api.verifyEmployeeRegistration).mockResolvedValue({ valid: true, name: "Operador" })
+
+    const { result } = renderHook(() => useSelfCheckout())
+
+    act(() => {
+      result.current.actions.addProduct({ ean: "999", id: 1, name: "Produto", price: 19.9, quantity: 1 })
+      result.current.actions.removeProduct(1)
+    })
+
+    expect(result.current.state.cart).toHaveLength(1)
+    expect(result.current.state.showBarcodeInputPopup).toBe(true)
+    expect(result.current.state.notification).toBe("Valide um funcionario para remover o produto.")
+
+    await act(async () => {
+      await result.current.actions.handleBarcodeSubmit("123456")
+    })
+
+    expect(api.verifyEmployeeRegistration).toHaveBeenCalledWith("123456")
+    expect(result.current.state.cart).toHaveLength(0)
+    expect(result.current.state.notification).toBe("Produto removido por funcionario Operador.")
+  })
 })

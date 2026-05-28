@@ -140,7 +140,14 @@ export default function Home() {
           )}
           {state.showBarcodeInputPopup && (
               <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                <BarcodeInputPopup onSubmit={actions.handleBarcodeSubmit} onCancel={() => actions.setShowBarcodeInputPopup(false)} />
+                <BarcodeInputPopup
+                    onSubmit={actions.handleBarcodeSubmit}
+                    onCancel={actions.handleBarcodeInputCancel}
+                    title={state.pendingRemovalProductId !== null ? "Validar Funcionário" : undefined}
+                    description={state.pendingRemovalProductId !== null ? "Digite a matrícula do funcionário para remover o produto." : undefined}
+                    placeholder={state.pendingRemovalProductId !== null ? "Digite a matrícula" : undefined}
+                    submitLabel={state.pendingRemovalProductId !== null ? "Validar" : undefined}
+                />
               </div>
           )}
           {state.showEmployeeCartPopup && state.employeeRegistration && (
